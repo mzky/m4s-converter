@@ -3,7 +3,7 @@
 将bilibili缓存的m4s转成mp4(读PC端缓存目录)
 
 ```
-支持单独和批量合成，比如：
+支持单独和批量目录识别，比如：
 C:\Users\mzky\Videos\bilibili\1332097557
 C:\Users\mzky\Videos\bilibili\
 ```
