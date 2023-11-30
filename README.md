@@ -1,8 +1,14 @@
 # m4s-converter
-blibli的m4s转成mp4（直读PC目录）
 
+将bilibili缓存的m4s转成mp4(读PC端缓存目录)
 
-``
+```
+支持单独和批量合成，比如：
+C:\Users\mzky\Videos\bilibili\1332097557
+C:\Users\mzky\Videos\bilibili\
+```
+
+```
 {
 "groupId": 1582186,
 "itemId ":1332097557,
@@ -13,7 +19,7 @@ blibli的m4s转成mp4（直读PC目录）
 "title": "蛇的“工作原理”",// 单个视频名称
 "groupTitle": "3D动画之工作原理", // 视频组名称
 }
-``
+```
 
 转换后的文件命名规则：groupTitle-title-uname.mp4
 
