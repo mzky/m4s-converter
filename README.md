@@ -21,12 +21,28 @@ C:\Users\mzky\Videos\bilibili\
 }
 ```
 
-转换后的文件命名规则：title-uname+合成时的时间戳.mp4
+转换后的文件命名规则：title-uname.mp4
 
 ```
 文件名识别：
-1332097557-1-30280.m4s // 所有30280均为音频
-1332097557-1-100048.m4s // 值不固定
+1332097557-1-30280.m4s // 所有30280均为音频文件
+1332097557-1-100048.m4s // 值不固定的为视频文件
+```
+
+自定义参数:
+```
+.\m4s-converter.exe -h
+Usage of m4s-converter.exe:
+  -c string
+        指定bilibili缓存目录 (default "C:\\Users\\mzky\\Videos\\bilibili")
+  -f string
+        指定ffmpeg路径，或将本程序访问ffmpeg.exe同目录 (default "D:\\git\\m4s-converter\\ffmpeg.exe")
+  -y    是否覆盖，默认不覆盖
+  
+.\m4s-converter.exe -f 
+.\m4s-converter.exe -f C:\ff\ffmpeg.exe 
+.\m4s-converter.exe -f C:\ff\ffmpeg.exe -y
+.\m4s-converter.exe -f C:\ff\ffmpeg.exe -c C:\Users\mzky\Videos\bilibili -y
 ```
 
 验证合成：
