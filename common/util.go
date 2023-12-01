@@ -175,7 +175,7 @@ func (c *Config) GetCachePath() {
 		return
 	}
 
-	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili1")
+	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
 	if Exist(videosDir) {
 		c.CachePath = videosDir
 		return
