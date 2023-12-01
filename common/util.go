@@ -64,6 +64,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
+		log.Print("视频生成中")
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -71,7 +72,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 				return
 			}
 			cmdErr := string(buf[:n])
-			//fmt.Print(cmdErr)
+			fmt.Print(".")
 			if strings.Contains(cmdErr, "exists") {
 				log.Println("视频文件已存在，跳过生成！")
 				return
@@ -84,7 +85,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println()
 	log.Println("已合成视频文件：\n", outputFile)
 	return nil
 }
