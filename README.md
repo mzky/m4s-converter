@@ -14,10 +14,10 @@ C:\Users\mzky\Videos\bilibili\
 "itemId ":1332097557,
 "aid": 620879911,
 "cid": 1332097557, // 文件夹名
-"tabName": "正片",
 "uname": "珂姬与科技", // 上传的用户名
 "title": "蛇的“工作原理”",// 单个视频名称
 "groupTitle": "3D动画之工作原理", // 视频组名称
+"status": "downloading",// downloading正在缓存中；pending等待缓存（还没有缓存文件）；completed缓存完成
 }
 ```
 

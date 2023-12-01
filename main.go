@@ -11,9 +11,11 @@ import (
 )
 
 func main() {
-	defer panicHandler()
 	var c common.Config
+	c.LogInit()
 	c.InitConfig()
+	defer panicHandler()
+	defer c.File.Close()
 
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
@@ -42,12 +44,21 @@ func main() {
 			continue
 		}
 		info := filepath.Join(v, ".videoInfo")
-		infoStr, _ := os.ReadFile(info)
+		infoStr, e := os.ReadFile(info)
+		if e != nil {
+			log.Println("找不到videoInfo文件: ", info)
+			continue
+		}
 		js, _ := simplejson.NewJson(infoStr)
 
 		groupTitle, _ := js.Get("groupTitle").String()
 		title, _ := js.Get("title").String()
 		uname, _ := js.Get("uname").String()
+		status, _ := js.Get("status").String()
+		if status != "completed" {
+			log.Println("未缓存完成,跳过", v, title+"-"+uname)
+			continue
+		}
 		outputDir := filepath.Join(filepath.Dir(v), "output")
 		if !common.Exist(outputDir) {
 			_ = os.Mkdir(outputDir, os.ModePerm)
@@ -68,17 +79,17 @@ func main() {
 	}
 
 	if outputFiles != nil {
-		log.Println("任务已全部完成:")
-		fmt.Println(strings.Join(outputFiles, "\n"))
+		log.Println("任务已全部完成:\n", strings.Join(outputFiles, "\n"))
 	}
+
 	var input string
 	fmt.Println("按回车键退出...")
 	fmt.Scanln(&input)
 }
 
 func panicHandler() {
-	if r := recover(); r != nil {
-		fmt.Println("FFmpeg执行异常:", r)
+	if e := recover(); e != nil {
+		log.Println(e)
 		var input string
 		fmt.Println("按回车键退出...")
 		fmt.Scanln(&input)

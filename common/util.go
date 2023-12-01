@@ -14,6 +14,7 @@ type Config struct {
 	FFmpegPath string
 	CachePath  string
 	Overlay    string
+	File       *os.File
 }
 
 func (c *Config) InitConfig() {
@@ -74,7 +75,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			cmdErr := string(buf[:n])
 			fmt.Print(".")
 			if strings.Contains(cmdErr, "exists") {
-				log.Println("视频文件已存在，跳过生成！")
+				log.Println("跳过已经生成的音视频文件！")
 				return
 			}
 		}
@@ -117,7 +118,9 @@ func GetCacheDir(cachePath string) ([]string, error) {
 			return err
 		}
 		if info.IsDir() && path != cachePath {
-			dirs = append(dirs, path)
+			if !strings.Contains(path, "output") {
+				dirs = append(dirs, path)
+			}
 		}
 		return nil
 	})
