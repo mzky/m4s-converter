@@ -54,8 +54,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	go func() {
 		for {
 			buf := make([]byte, 1024)
-			n, err := stdout.Read(buf)
-			if err != nil {
+			n, e := stdout.Read(buf)
+			if e != nil {
 				return
 			}
 			fmt.Print(string(buf[:n]))
@@ -66,14 +66,14 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	go func() {
 		for {
 			buf := make([]byte, 1024)
-			n, err := stderr.Read(buf)
-			if err != nil {
+			n, e := stderr.Read(buf)
+			if e != nil {
 				return
 			}
 			cmdErr := string(buf[:n])
-			fmt.Print(cmdErr)
+			//fmt.Print(cmdErr)
 			if strings.Contains(cmdErr, "exists") {
-				log.Println("视频文件已存在，跳过合成！")
+				log.Println("视频文件已存在，跳过生成！")
 				return
 			}
 		}

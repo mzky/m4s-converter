@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	defer panicHandler()
 	var c common.Config
 	c.InitConfig()
 
@@ -65,9 +66,21 @@ func main() {
 		}
 		outputFiles = append(outputFiles, outputFile)
 	}
+
 	if outputFiles != nil {
 		log.Println("任务已全部完成:")
 		fmt.Println(strings.Join(outputFiles, "\n"))
 	}
+	var input string
+	fmt.Println("按回车键退出...")
+	fmt.Scanln(&input)
+}
 
+func panicHandler() {
+	if r := recover(); r != nil {
+		fmt.Println("FFmpeg执行异常:", r)
+		var input string
+		fmt.Println("按回车键退出...")
+		fmt.Scanln(&input)
+	}
 }
