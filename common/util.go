@@ -10,28 +10,34 @@ import (
 	"strings"
 )
 
-var (
-	wd, _      = os.Getwd()
-	FFmpegPath = filepath.Join(wd, "ffmpeg.exe") // 指定ffmpeg路径
-	CachePath  = GetCachePath()                  // 指定要操作的目标文件路径
-	Overlay    = "-n"
-)
+type Config struct {
+	FFmpegPath string
+	CachePath  string
+	Overlay    string
+}
 
-func Composition(videoFile, audioFile, outputFile string) error {
+func (c *Config) InitConfig() {
+	c.Flags()
+	c.GetFFmpegPath()
+	c.GetCachePath()
+	c.Overlay = "-n"
+}
+
+func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	// 构建FFmpeg命令行参数
 	args := []string{
 		"-i", videoFile,
 		"-i", audioFile,
-		"-c:v", "copy",
-		"-c:a", "aac",
-		"-strict", "experimental",
-		Overlay, // 是否覆盖已存在视频
+		"-c:v", "copy", // video不指定编解码，使用bilibili原有编码
+		"-c:a", "copy", // audio不指定编解码，使用bilibili原有编码
+		"-strict", "experimental", // 宽松编码控制器
+		c.Overlay, // 是否覆盖已存在视频
 		outputFile,
 		"-hide_banner", // 隐藏版本信息和版权声明
 		"-stats",       // 只显示统计信息
 	}
 
-	cmd := exec.Command(FFmpegPath, args...)
+	cmd := exec.Command(c.FFmpegPath, args...)
 
 	// 设置输出和错误流 pipe
 	stdout, _ := cmd.StdoutPipe()
@@ -40,7 +46,7 @@ func Composition(videoFile, audioFile, outputFile string) error {
 	// 启动命令
 	err := cmd.Start()
 	if err != nil {
-		fmt.Printf("启动命令失败: %s\n", err)
+		c.MessageBox(fmt.Sprintf("执行FFmpeg命令失败: %s", err))
 		os.Exit(1)
 	}
 
@@ -67,7 +73,7 @@ func Composition(videoFile, audioFile, outputFile string) error {
 			cmdErr := string(buf[:n])
 			fmt.Print(cmdErr)
 			if strings.Contains(cmdErr, "exists") {
-				fmt.Println("视频文件已存在，跳过合成！")
+				log.Println("视频文件已存在，跳过合成！")
 				return
 			}
 		}
@@ -79,11 +85,11 @@ func Composition(videoFile, audioFile, outputFile string) error {
 		return err
 	}
 
-	log.Println("已合成视频文件：", outputFile)
+	log.Println("已合成视频文件：\n", outputFile)
 	return nil
 }
 
-func FindM4sFiles(src string, info os.DirEntry, err error) error {
+func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 	if err != nil {
 		return err
 	}
@@ -96,6 +102,7 @@ func FindM4sFiles(src string, info os.DirEntry, err error) error {
 			dst = src + "-video.mp4"
 		}
 		if err = M4sToAudioOrVideo(src, dst); err != nil {
+			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
 	}
@@ -154,38 +161,45 @@ func M4sToAudioOrVideo(src, dst string) error {
 	}
 
 	// 截取从第10个字符开始的数据,另存音视频文件
-	err = os.WriteFile(dst, data[9:], 0644)
+	err = os.WriteFile(dst, data[9:], os.ModePerm)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetCachePath() string {
-	user, err := user.Current()
+func (c *Config) GetCachePath() {
+	u, err := user.Current()
 	if err != nil {
-		log.Println("无法获取当前用户：", err)
-		return ""
+		c.MessageBox(fmt.Sprintf("无法获取当前用户：%v", err))
+		return
 	}
 
-	videosDir := filepath.Join(user.HomeDir, "Videos", "bilibili")
-	ext, err := exists(videosDir)
-	if err != nil && ext {
-		log.Println("检查目录是否存在:", err)
-		return ""
+	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili1")
+	if Exist(videosDir) {
+		c.CachePath = videosDir
+		return
 	}
-
-	return videosDir
-
+	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
+		log.Println("选择的 bilibili 缓存目录为: ", c.CachePath)
+		return
+	}
+	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + " ，\n请选择 bilibili 当前设置的缓存路径！")
+	c.SelectDirectory()
 }
 
-func exists(path string) (bool, error) {
+func (c *Config) GetFFmpegPath() {
+	wd, _ := os.Getwd()
+	c.FFmpegPath = filepath.Join(wd, "ffmpeg.exe") // 指定ffmpeg路径
+	if !Exist(c.FFmpegPath) {
+		c.SelectFile()
+	}
+}
+
+func Exist(path string) bool {
 	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
+	if err != nil {
+		return false
 	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
+	return true
 }

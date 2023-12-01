@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/bitly/go-simplejson"
 	"log"
@@ -12,54 +11,59 @@ import (
 )
 
 func main() {
-	ffmpegPath := flag.String("f", common.FFmpegPath, "指定ffmpeg路径，或将本程序访问ffmpeg.exe同目录")
-	cachePath := flag.String("c", common.CachePath, "指定bilibili缓存目录")
-	overlay := flag.Bool("y", false, "是否覆盖，默认不覆盖")
+	var c common.Config
+	c.InitConfig()
 
-	flag.Parse()
-
-	if *overlay {
-		common.Overlay = "-y"
-	}
-	if *ffmpegPath != common.FFmpegPath {
-		common.FFmpegPath = *ffmpegPath
-	}
-	if *cachePath != common.CachePath {
-		common.CachePath = *cachePath
+	// 查找m4s文件，并转换为mp4和mp3
+	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
+		c.MessageBox(fmt.Sprintf("找不到 bilibili 的缓存 m4s 文件：%v", err))
+		os.Exit(1)
 	}
 
-	// 使用WalkDir遍历目录及其子目录
-	if err := filepath.WalkDir(common.CachePath, common.FindM4sFiles); err != nil {
-		log.Println("找不到bilibili的缓存m4s文件:", err)
-		return
-	}
-	dirs, err := common.GetCacheDir(common.CachePath)
+	dirs, err := common.GetCacheDir(c.CachePath)
 	if err != nil {
-		log.Println("找不到bilibili的缓存目录:", err)
-		return
+		c.MessageBox(fmt.Sprintf("找不到 bilibili 的缓存目录：%v", err))
+		os.Exit(1)
 	}
+
+	if dirs == nil {
+		if common.Exist(filepath.Join(c.CachePath, ".videoInfo")) {
+			dirs = append(dirs, c.CachePath)
+		}
+	}
+
+	// 合成音视频文件
 	var outputFiles []string
 	for _, v := range dirs {
-		video, audio, err := common.GetAudioAndVideo(v)
-		if err != nil {
-			log.Println("找不到音频和视频文件:", err)
+		video, audio, e := common.GetAudioAndVideo(v)
+		if e != nil {
+			log.Println("找不到已修复的音频和视频文件：", err)
 			continue
 		}
 		info := filepath.Join(v, ".videoInfo")
 		infoStr, _ := os.ReadFile(info)
 		js, _ := simplejson.NewJson(infoStr)
 
-		//groupTitle, _ := js.Get("groupTitle").String()
+		groupTitle, _ := js.Get("groupTitle").String()
 		title, _ := js.Get("title").String()
 		uname, _ := js.Get("uname").String()
-		outputFile := filepath.Join(v, title+"-"+uname+".mp4")
-		if err := common.Composition(video, audio, outputFile); err != nil {
-			log.Println(err)
+		outputDir := filepath.Join(filepath.Dir(v), "output")
+		_ = os.Mkdir(outputDir, os.ModePerm)
+		groupDir := filepath.Join(outputDir, groupTitle)
+		if os.Mkdir(groupDir, os.ModePerm) != nil {
+			c.MessageBox("无权限创建目录：" + groupDir)
+			os.Exit(1)
+		}
+		outputFile := filepath.Join(groupDir, title+"-"+uname+".mp4")
+		if er := c.Composition(video, audio, outputFile); er != nil {
+			log.Println(er)
 			continue
 		}
 		outputFiles = append(outputFiles, outputFile)
 	}
-	log.Println("任务已全部完成:")
-	fmt.Println(strings.Join(outputFiles, "\n"))
+	if outputFiles != nil {
+		log.Println("任务已全部完成:")
+		fmt.Println(strings.Join(outputFiles, "\n"))
+	}
 
 }
