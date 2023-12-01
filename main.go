@@ -48,11 +48,15 @@ func main() {
 		title, _ := js.Get("title").String()
 		uname, _ := js.Get("uname").String()
 		outputDir := filepath.Join(filepath.Dir(v), "output")
-		_ = os.Mkdir(outputDir, os.ModePerm)
+		if !common.Exist(outputDir) {
+			_ = os.Mkdir(outputDir, os.ModePerm)
+		}
 		groupDir := filepath.Join(outputDir, groupTitle)
-		if os.Mkdir(groupDir, os.ModePerm) != nil {
-			c.MessageBox("无权限创建目录：" + groupDir)
-			os.Exit(1)
+		if !common.Exist(groupDir) {
+			if os.Mkdir(groupDir, os.ModePerm) != nil {
+				c.MessageBox("无权限创建目录：" + groupDir)
+				os.Exit(1)
+			}
 		}
 		outputFile := filepath.Join(groupDir, title+"-"+uname+".mp4")
 		if er := c.Composition(video, audio, outputFile); er != nil {
