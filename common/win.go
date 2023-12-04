@@ -1,10 +1,9 @@
 package common
 
 import (
-	"fmt"
 	"github.com/lxn/win"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/windows"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,7 +18,7 @@ func _TEXT(str string) *uint16 {
 
 func (c *Config) MessageBox(text string) {
 	var handle windows.Handle
-	log.Println(text)
+	logrus.Error(text)
 	win.MessageBox(win.HWND(handle), _TEXT(text), _TEXT("消息"), win.MB_ICONWARNING)
 }
 
@@ -38,18 +37,18 @@ func (c *Config) SelectFile() {
 
 	// 打开文件选择窗口
 	if !win.GetOpenFileName(&ofn) {
-		fmt.Println("关闭对话框后自动退出程序")
+		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
 
 	c.FFmpegPath = win.UTF16PtrToString(ofn.LpstrFile)
 	if strings.Contains(c.FFmpegPath, "ffmpeg.exe") {
-		log.Println("选择的ffmpeg文件: ", c.FFmpegPath)
+		logrus.Info("选择的ffmpeg文件: ", c.FFmpegPath)
 		return
 	}
 	c.MessageBox("请选择 ffmpeg.exe 程序文件，如未安装可从以下地址下载：" +
-		"\n https://github.com/GyanD/codexffmpeg/releases" +
-		"\n https://github.com/BtbN/FFmpeg-Builds/releases")
+		"\nhttps://github.com/GyanD/codexffmpeg/releases" +
+		"\nhttps://github.com/BtbN/FFmpeg-Builds/releases")
 	c.SelectFile() // 选错重新弹出对话框进行选择
 }
 
@@ -59,7 +58,7 @@ func (c *Config) SelectDirectory() {
 
 	pid := win.SHBrowseForFolder(&bsi)
 	if pid == 0 {
-		fmt.Println("关闭对话框后自动退出程序")
+		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
 	defer win.CoTaskMemFree(pid)
@@ -69,7 +68,7 @@ func (c *Config) SelectDirectory() {
 
 	c.CachePath = syscall.UTF16ToString(path)
 	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
-		log.Println("选择的 bilibili 缓存目录为:", c.CachePath)
+		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
 		return
 	}
 	c.MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")

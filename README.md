@@ -1,6 +1,9 @@
 # m4s-converter
 
-将bilibili缓存的m4s转成mp4(读PC端缓存目录)
+## 为什么开发此程序？
+bilibili下架了很多视频，之前收藏和缓存（ipad）的均无法播放，
+
+喜欢的视频赶紧缓存起来，使用本程序将bilibili缓存的m4s转成mp4，以便后续播放
 
 ```
 支持单独和批量目录识别，比如：
@@ -77,4 +80,17 @@ C:\Users\mzky\Videos\bilibili\1333045397\2M大小开源神器，Windows 11的救
 C:\Users\mzky\Videos\bilibili\1335961247\豆瓣9.1分，时隔40年就再也没人能拍出这么干净的国产电影了！唉！！-7块电影.mp4
 C:\Users\mzky\Videos\bilibili\test\2M大小开源神器，Windows 11的救星！-JOKER鹏少.mp4
 PS C:\ff>
+```
+
+## 本程序依赖ffmpeg
+```
+可从这两个地方下载
+https://github.com/GyanD/codexffmpeg/releases
+https://github.com/BtbN/FFmpeg-Builds/releases
+```
+
+### 非缓存下载方式，推荐使用其它工具
+```
+https://github.com/nICEnnnnnnnLee/BilibiliDown
+https://github.com/leiurayer/downkyi
 ```

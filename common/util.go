@@ -2,7 +2,10 @@ package common
 
 import (
 	"fmt"
-	"log"
+	"github.com/cheggaaa/pb/v3"
+	"github.com/sirupsen/logrus"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -65,7 +68,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		log.Print("视频生成中")
+		logrus.Print("视频生成中")
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -75,19 +78,15 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			cmdErr := string(buf[:n])
 			fmt.Print(".")
 			if strings.Contains(cmdErr, "exists") {
-				log.Println("跳过已经生成的音视频文件！")
-				return
+				fmt.Println()
+				logrus.Warn("跳过已经生成的音视频文件！")
 			}
 		}
 	}()
 
 	// 等待命令执行完成
-	err = cmd.Wait()
-	if err != nil {
-		return err
-	}
-	fmt.Println()
-	log.Println("已合成视频文件：\n", outputFile)
+	cmd.Wait()
+	logrus.Info("已合成视频文件:", filepath.Base(outputFile))
 	return nil
 }
 
@@ -107,6 +106,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
+		logrus.Info("已将m4s转换为音视频文件:", dst)
 	}
 	return nil
 }
@@ -158,17 +158,38 @@ func GetAudioAndVideo(cachePath string) (string, string, error) {
 }
 
 func M4sToAudioOrVideo(src, dst string) error {
-	// 读取源文件内容
-	data, err := os.ReadFile(src)
+	srcFile, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("打开文件失败: %v", err)
+	}
+	defer srcFile.Close()
+
+	// 读取前9个字符
+	data := make([]byte, 9)
+	io.ReadAtLeast(srcFile, data, 9)
+	if string(data) != "000000000" {
+		return fmt.Errorf("音视频文件不是9个0的头，跳过转换")
 	}
 
-	// 截取从第10个字符开始的数据,另存音视频文件
-	err = os.WriteFile(dst, data[9:], os.ModePerm)
+	// 移动到第9个字节
+	_, err = srcFile.Seek(9, 0) // 从文件开头偏移
 	if err != nil {
-		return err
+		return fmt.Errorf("文件字节偏移失败: %v", err)
 	}
+
+	// 创建新文件
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("创建新文件失败: %v", err)
+	}
+	defer dstFile.Close()
+
+	// 将截取后的内容写入新文件
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("写入文件失败: %v", err)
+	}
+
 	return nil
 }
 
@@ -185,10 +206,10 @@ func (c *Config) GetCachePath() {
 		return
 	}
 	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
-		log.Println("选择的 bilibili 缓存目录为: ", c.CachePath)
+		logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
 		return
 	}
-	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + " ，\n请选择 bilibili 当前设置的缓存路径！")
+	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + " ，请选择 bilibili 当前设置的缓存路径！")
 	c.SelectDirectory()
 }
 
@@ -196,7 +217,15 @@ func (c *Config) GetFFmpegPath() {
 	wd, _ := os.Getwd()
 	c.FFmpegPath = filepath.Join(wd, "ffmpeg.exe") // 指定ffmpeg路径
 	if !Exist(c.FFmpegPath) {
-		c.SelectFile()
+		logrus.Info("找不到ffmpeg.exe,自动下载ffmpeg...")
+		if err := DownloadFile(); err != nil {
+			logrus.Error(err)
+			return
+		}
+		if !Exist(c.FFmpegPath) {
+			logrus.Warn("无法自动下载ffmpeg,打开本地ffmpeg.exe文件")
+			c.SelectFile()
+		}
 	}
 }
 
@@ -206,4 +235,45 @@ func Exist(path string) bool {
 		return false
 	}
 	return true
+}
+
+func DownloadFile() error {
+	url := "https://mirror.ghproxy.com/https://github.com/mzky/m4s-converter/releases/download/ffmpeg/ffmpeg.exe"
+	filename := "ffmpeg.exe"
+
+	response, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("无法访问: %v", err)
+	}
+	defer response.Body.Close()
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("无权创建: %v", err)
+	}
+	defer file.Close()
+
+	bar := pb.Full.Start64(response.ContentLength)
+
+	reader := bar.NewProxyReader(response.Body)
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return fmt.Errorf("写入失败: %v", err)
+	}
+
+	bar.Finish()
+	return nil
+}
+
+func Filter(name string, err error) string {
+	name = strings.ReplaceAll(name, "<", "《")
+	name = strings.ReplaceAll(name, ">", "》")
+	name = strings.ReplaceAll(name, `\`, "#")
+	name = strings.ReplaceAll(name, `"`, "'")
+	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, "|", "_")
+	name = strings.ReplaceAll(name, "?", "_")
+	name = strings.ReplaceAll(name, "*", "_")
+
+	return name
 }
