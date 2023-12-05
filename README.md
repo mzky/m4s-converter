@@ -50,44 +50,37 @@ Usage of m4s-converter.exe:
 
 验证合成：
 ```
-....略
-      handler_name    : SoundHandler
-Stream mapping:
-  Stream #0:0 -> #0:0 (copy)
-  Stream #1:0 -> #0:1 (aac (native) -> aac (native))
-Press [q] to stop, [?] for help
-Output #0, mp4, to 'C:\Users\mzky\Videos\bilibili\test\2M大小开源神器，Windows 11的救星！-JOKER鹏少.mp4':
-  Metadata:
-    major_brand     : iso5
-    minor_version   : 1
-    compatible_brands: avc1iso5dsmsmsixdash
-    description     : Packed by Bilibili XCoder v2.0.2
-    encoder         : Lavf58.45.100
-    Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080 [SAR 1:1 DAR 16:9], q=2-31, 8 kb/s, 30 fps, 30 tbr, 16k tbn, 16k tbc (default)
-    Metadata:
-      handler_name    : VideoHandler
-    Stream #0:1(und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 128 kb/s (default)
-    Metadata:
-      handler_name    : SoundHandler
-      encoder         : Lavc58.91.100 aac
-frame= 6545 fps=2032 q=-1.0 Lsize=    9123kB time=00:03:38.26 bitrate= 342.4kbits/s speed=67.8x
-video:5462kB audio:3391kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 3.052492%
-[aac @ 000002beaa4f9200] Qavg: 754.864
-2023/11/30 18:26:37 已合成视频文件： C:\Users\mzky\Videos\bilibili\test\2M大小开源神器，Windows 11的救星！-JOKER鹏少.mp4
-2023/11/30 18:26:37 任务已全部完成:
-C:\Users\mzky\Videos\bilibili\1332097557\蛇的“工作原理”-珂姬与科技.mp4
-C:\Users\mzky\Videos\bilibili\1333045397\2M大小开源神器，Windows 11的救星！-JOKER鹏少.mp4
-C:\Users\mzky\Videos\bilibili\1335961247\豆瓣9.1分，时隔40年就再也没人能拍出这么干净的国产电影了！唉！！-7块电影.mp4
-C:\Users\mzky\Videos\bilibili\test\2M大小开源神器，Windows 11的救星！-JOKER鹏少.mp4
-PS C:\ff>
+2023-12-05_16:02:41 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\1120254313\1120254313_nb3-1-30080.m4s-video.mp4
+2023-12-05_16:02:41 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\1120254313\1120254313_nb3-1-30280.m4s-audio.mp3
+2023-12-05_16:02:41 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\65093887\65093887-1-30032.m4s-video.mp4
+2023-12-05_16:02:41 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\65093887\65093887-1-30280.m4s-audio.mp3
+2023-12-05_16:02:42 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\799281779\799281779_nb3-1-30080.m4s-video.mp4
+2023-12-05_16:02:42 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\799281779\799281779_nb3-1-30280.m4s-audio.mp3
+2023-12-05_16:02:43 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\869752798\869752798_da2-1-30080.m4s-video.mp4
+2023-12-05_16:02:43 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\869752798\869752798_da2-1-30280.m4s-audio.mp3
+准备合成mp4 .............
+2023-12-05_16:02:43 [INFO ] 已合成视频文件:【获奖学生动画】The Little Poet 小诗人｜CALARTS 2023-toh糖.mp4
+准备合成mp4 ................
+2023-12-05_16:02:43 [INFO ] 已合成视频文件:40年光影记忆-开飞机的巡查司.mp4
+准备合成mp4 ................
+2023-12-05_16:02:45 [INFO ] 已合成视频文件:“我不是个好导演”，听田壮壮讲述“我和电影的关系”-Tatler的朋友们.mp4
+准备合成mp4 ...............
+2023-12-05_16:02:46 [INFO ] 已合成视频文件:中国-美景极致享受-笨蹦崩.mp4
+2023-12-05_16:02:46 [INFO ] ==========================================
+2023-12-05_16:02:46 [INFO ] 合成的文件:
+C:\Users\mzky\Videos\bilibili\output\【获奖学生动画】The Little Poet 小诗人｜CALARTS 2023\【获奖学生动画】The Little Poet 小诗人｜CALARTS 2023-toh糖.mp4
+C:\Users\mzky\Videos\bilibili\output\【电影历史_专题片】《影响》致敬中国电影40年【全集】\40年光影记忆-开飞机的巡查司.mp4
+C:\Users\mzky\Videos\bilibili\output\“我不是个好导演”，听田壮壮讲述“我和电影的关系”\“我不是个好导演”，听田壮壮讲述“我和电影的关系”-Tatler的朋友们.mp4
+C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-美景极致享受-笨蹦崩.mp4
+2023-12-05_16:02:46 [INFO ] 已完成本次任务，耗时:5秒
+2023-12-05_16:02:46 [INFO ] ==========================================
+按回车键退出...
 ```
 
-## 本程序依赖ffmpeg
-```
-可从这两个地方下载
-https://github.com/GyanD/codexffmpeg/releases
-https://github.com/BtbN/FFmpeg-Builds/releases
-```
+合成 1.46GB 文件，耗时: 5 秒
+
+合成 11.7GB 文件，耗时:38 秒
+
 
 ### 非缓存下载方式，推荐使用其它工具
 ```

@@ -4,13 +4,16 @@ import (
 	"crypto/sha256"
 	"embed"
 	"fmt"
+	"github.com/lxn/win"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/windows"
 	"io"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 //go:embed ffmpeg.exe
@@ -22,7 +25,7 @@ var (
 )
 
 type Config struct {
-	FFmpegPath string
+	FFMpegPath string
 	CachePath  string
 	Overlay    string
 	File       *os.File
@@ -49,7 +52,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		"-stats",       // 只显示统计信息
 	}
 
-	cmd := exec.Command(c.FFmpegPath, args...)
+	cmd := exec.Command(c.FFMpegPath, args...)
 
 	// 设置输出和错误流 pipe
 	stdout, _ := cmd.StdoutPipe()
@@ -93,6 +96,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
+		fmt.Println()
 		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
 	}
 	return nil
@@ -223,8 +227,8 @@ func (c *Config) GetCachePath() {
 
 func (c *Config) GetFFmpegPath() {
 	wd, _ := os.Getwd()
-	c.FFmpegPath = filepath.Join(wd, FFmpegName) // 指定ffmpeg路径
-	if !Exist(c.FFmpegPath) {
+	c.FFMpegPath = filepath.Join(wd, FFmpegName) // 指定ffmpeg路径
+	if !Exist(c.FFMpegPath) {
 		logrus.Info("第一次运行,自动释放ffmpeg.exe")
 		if err := DecFile(); err != nil {
 			logrus.Error(err)
@@ -284,7 +288,7 @@ func (c *Config) PanicHandler() {
 }
 
 func (c *Config) FileHashCompare() bool {
-	file, err := os.ReadFile(c.FFmpegPath)
+	file, err := os.ReadFile(c.FFMpegPath)
 	if err != nil {
 		logrus.Error("打开文件失败:", err)
 		return false
@@ -295,4 +299,46 @@ func (c *Config) FileHashCompare() bool {
 	sha256Str := fmt.Sprintf("%x", hash)
 
 	return FileHashValue == strings.ToUpper(sha256Str)
+}
+
+func _TEXT(str string) *uint16 {
+	ptr, _ := syscall.UTF16PtrFromString(str)
+	return ptr
+}
+
+func (c *Config) MessageBox(text string) {
+	logrus.Error(text)
+	win.MessageBox(win.HWND_TOP, _TEXT(text), _TEXT("消息"), win.MB_ICONWARNING)
+}
+
+func (c *Config) SelectDirectory() {
+	var bsi win.BROWSEINFO
+	bsi.LpszTitle = _TEXT("请选择 bilibili 缓存目录")
+
+	pid := win.SHBrowseForFolder(&bsi)
+	if pid == 0 {
+		logrus.Warn("关闭对话框后自动退出程序")
+		os.Exit(1)
+	}
+	defer win.CoTaskMemFree(pid)
+
+	path := make([]uint16, win.MAX_PATH)
+	win.SHGetPathFromIDList(pid, &path[0])
+
+	c.CachePath = syscall.UTF16ToString(path)
+	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
+		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
+		return
+	}
+	c.MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")
+	c.SelectDirectory()
+}
+
+// LockMutex windows下的单实例锁
+func (c *Config) LockMutex(name string) error {
+	_, err := windows.CreateMutex(nil, true, _TEXT(name))
+	if err != nil {
+		return err
+	}
+	return nil
 }

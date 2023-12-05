@@ -17,6 +17,11 @@ func main() {
 	defer c.PanicHandler()
 	defer c.File.Close()
 
+	if c.LockMutex("m4sTool") != nil {
+		//c.MessageBox("只能运行一个实例！")
+		os.Exit(1)
+	}
+
 	begin := time.Now().Unix()
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
@@ -94,6 +99,7 @@ func main() {
 	}
 	logrus.Print("已完成本次任务，耗时:", end-begin, "秒")
 	logrus.Print("==========================================")
+
 	fmt.Print("按回车键退出...")
 	c.File.Close()
 	fmt.Scanln()
