@@ -18,7 +18,7 @@ var ffmpegFile embed.FS
 
 var (
 	FFmpegName    = "ffmpeg.exe"
-	FileHashValue = "e3de8aad89e68d2f161050fb97a6568a2d8ff3ca0eae695448097e4d174a02d1"
+	FileHashValue = "F609B2C460ADC9BA914CA59CD2A75CC706E2F6E3A7B90D1EEEE1BF6E8A8AA0E0"
 )
 
 type Config struct {
@@ -30,7 +30,6 @@ type Config struct {
 
 func (c *Config) InitConfig() {
 	InitLog()
-	c.Flags()
 	c.GetFFmpegPath()
 	c.GetCachePath()
 	c.Overlay = "-n"
@@ -295,5 +294,5 @@ func (c *Config) FileHashCompare() bool {
 	hash := sha256.Sum256(file)
 	sha256Str := fmt.Sprintf("%x", hash)
 
-	return FileHashValue == sha256Str
+	return FileHashValue == strings.ToUpper(sha256Str)
 }
