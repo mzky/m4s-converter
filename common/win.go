@@ -6,9 +6,7 @@ import (
 	"golang.org/x/sys/windows"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
-	"unsafe"
 )
 
 func _TEXT(str string) *uint16 {
@@ -22,35 +20,36 @@ func (c *Config) MessageBox(text string) {
 	win.MessageBox(win.HWND(handle), _TEXT(text), _TEXT("消息"), win.MB_ICONWARNING)
 }
 
-func (c *Config) SelectFile() {
-	fileName := make([]uint16, 256)
-	ofn := win.OPENFILENAME{
-		LStructSize: uint32(unsafe.Sizeof(win.OPENFILENAME{})),
-		LpstrFile:   &fileName[0],
-		NMaxFile:    uint32(len(fileName)),
-		HwndOwner:   win.HWND(0),
-		//LpstrFilter:   _TEXT("选择文件 (*.exe)\000*.exe\000"),
-		LpstrTitle:    _TEXT("选择ffmpeg.exe文件"),
-		NMaxFileTitle: 255,
-		//Flags:         win.OFN_EXPLORER | win.OFN_FILEMUSTEXIST | win.OFN_PATHMUSTEXIST | win.OFN_LONGNAMES,
-	}
-
-	// 打开文件选择窗口
-	if !win.GetOpenFileName(&ofn) {
-		logrus.Warn("关闭对话框后自动退出程序")
-		os.Exit(1)
-	}
-
-	c.FFmpegPath = win.UTF16PtrToString(ofn.LpstrFile)
-	if strings.Contains(c.FFmpegPath, "ffmpeg.exe") {
-		logrus.Info("选择的ffmpeg文件: ", c.FFmpegPath)
-		return
-	}
-	c.MessageBox("请选择 ffmpeg.exe 程序文件，如未安装可从以下地址下载：" +
-		"\nhttps://github.com/GyanD/codexffmpeg/releases" +
-		"\nhttps://github.com/BtbN/FFmpeg-Builds/releases")
-	c.SelectFile() // 选错重新弹出对话框进行选择
-}
+//
+//func (c *Config) SelectFile() {
+//	fileName := make([]uint16, 256)
+//	ofn := win.OPENFILENAME{
+//		LStructSize: uint32(unsafe.Sizeof(win.OPENFILENAME{})),
+//		LpstrFile:   &fileName[0],
+//		NMaxFile:    uint32(len(fileName)),
+//		HwndOwner:   win.HWND(0),
+//		//LpstrFilter:   _TEXT("选择文件 (*.exe)\000*.exe\000"),
+//		LpstrTitle:    _TEXT("选择ffmpeg.exe文件"),
+//		NMaxFileTitle: 255,
+//		//Flags:         win.OFN_EXPLORER | win.OFN_FILEMUSTEXIST | win.OFN_PATHMUSTEXIST | win.OFN_LONGNAMES,
+//	}
+//
+//	// 打开文件选择窗口
+//	if !win.GetOpenFileName(&ofn) {
+//		logrus.Warn("关闭对话框后自动退出程序")
+//		os.Exit(1)
+//	}
+//
+//	c.FFmpegPath = win.UTF16PtrToString(ofn.LpstrFile)
+//	if strings.Contains(c.FFmpegPath, "ffmpeg.exe") {
+//		logrus.Info("选择的ffmpeg文件: ", c.FFmpegPath)
+//		return
+//	}
+//	c.MessageBox("请选择 ffmpeg.exe 程序文件，如未安装可从以下地址下载：" +
+//		"\nhttps://github.com/GyanD/codexffmpeg/releases" +
+//		"\nhttps://github.com/BtbN/FFmpeg-Builds/releases")
+//	c.SelectFile() // 选错重新弹出对话框进行选择
+//}
 
 func (c *Config) SelectDirectory() {
 	var bsi win.BROWSEINFO

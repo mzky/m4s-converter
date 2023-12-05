@@ -13,7 +13,6 @@ import (
 
 func main() {
 	var c common.Config
-	c.LogInit()
 	c.InitConfig()
 	defer c.PanicHandler()
 	defer c.File.Close()
@@ -86,15 +85,16 @@ func main() {
 	end := time.Now().Unix()
 	logrus.Print("==========================================")
 	if skipFilePaths != nil {
-		logrus.Print("跳过的目录:", strings.Join(skipFilePaths, "\n"))
+		logrus.Print("跳过的目录:\n" + strings.Join(skipFilePaths, "\n"))
 	}
 	if outputFiles != nil {
-		logrus.Print("合成的文件:", strings.Join(outputFiles, "\n"))
+		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
 	logrus.Print("已完成本次任务，耗时:", end-begin, "秒")
-	logrus.Print("按回车键退出...")
+	logrus.Print("==========================================")
+	fmt.Print("按回车键退出...")
 	c.File.Close()
 	fmt.Scanln()
 }

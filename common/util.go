@@ -1,16 +1,24 @@
 package common
 
 import (
+	"crypto/sha256"
+	"embed"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/sirupsen/logrus"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
+)
+
+//go:embed ffmpeg.exe
+var ffmpegFile embed.FS
+
+var (
+	FFmpegName    = "ffmpeg.exe"
+	FileHashValue = "e3de8aad89e68d2f161050fb97a6568a2d8ff3ca0eae695448097e4d174a02d1"
 )
 
 type Config struct {
@@ -21,6 +29,7 @@ type Config struct {
 }
 
 func (c *Config) InitConfig() {
+	InitLog()
 	c.Flags()
 	c.GetFFmpegPath()
 	c.GetCachePath()
@@ -48,8 +57,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	stderr, _ := cmd.StderrPipe()
 
 	// 启动命令
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		c.MessageBox(fmt.Sprintf("执行FFmpeg命令失败: %s", err))
 		os.Exit(1)
 	}
@@ -68,7 +76,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		logrus.Print("视频生成中")
+		fmt.Print("准备合成mp4 ...")
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -79,14 +87,15 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			fmt.Print(".")
 			if strings.Contains(cmdErr, "exists") {
 				fmt.Println()
-				logrus.Warn("跳过已经生成的音视频文件！")
+				logrus.Warn("跳过已经存在的音视频文件:", filepath.Base(outputFile))
 			}
 		}
 	}()
 
 	// 等待命令执行完成
-	cmd.Wait()
-	logrus.Info("已合成视频文件:", filepath.Base(outputFile))
+	if err := cmd.Wait(); err == nil {
+		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
+	}
 	return nil
 }
 
@@ -215,18 +224,35 @@ func (c *Config) GetCachePath() {
 
 func (c *Config) GetFFmpegPath() {
 	wd, _ := os.Getwd()
-	c.FFmpegPath = filepath.Join(wd, "ffmpeg.exe") // 指定ffmpeg路径
+	c.FFmpegPath = filepath.Join(wd, FFmpegName) // 指定ffmpeg路径
 	if !Exist(c.FFmpegPath) {
-		logrus.Info("找不到ffmpeg.exe,自动下载ffmpeg...")
-		if err := DownloadFile(); err != nil {
+		logrus.Info("第一次运行,自动释放ffmpeg.exe")
+		if err := DecFile(); err != nil {
+			logrus.Error(err)
+		}
+	}
+	if !c.FileHashCompare() {
+		logrus.Info("文件不完整,重新释放ffmpeg.exe")
+		if err := DecFile(); err != nil {
 			logrus.Error(err)
 			return
 		}
-		if !Exist(c.FFmpegPath) {
-			logrus.Warn("无法自动下载ffmpeg,打开本地ffmpeg.exe文件")
-			c.SelectFile()
-		}
 	}
+}
+
+func DecFile() error {
+	file, err := ffmpegFile.Open(FFmpegName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 使用文件
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(FFmpegName, data, os.ModePerm)
 }
 
 func Exist(path string) bool {
@@ -235,34 +261,6 @@ func Exist(path string) bool {
 		return false
 	}
 	return true
-}
-
-func DownloadFile() error {
-	url := "https://mirror.ghproxy.com/https://github.com/mzky/m4s-converter/releases/download/ffmpeg/ffmpeg.exe"
-	filename := "ffmpeg.exe"
-
-	response, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("无法访问: %v", err)
-	}
-	defer response.Body.Close()
-
-	file, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("无权创建: %v", err)
-	}
-	defer file.Close()
-
-	bar := pb.Full.Start64(response.ContentLength)
-
-	reader := bar.NewProxyReader(response.Body)
-	_, err = io.Copy(file, reader)
-	if err != nil {
-		return fmt.Errorf("写入失败: %v", err)
-	}
-
-	bar.Finish()
-	return nil
 }
 
 func Filter(name string, err error) string {
@@ -276,4 +274,26 @@ func Filter(name string, err error) string {
 	name = strings.ReplaceAll(name, "*", "_")
 
 	return name
+}
+
+func (c *Config) PanicHandler() {
+	if e := recover(); e != nil {
+		c.File.Close()
+		fmt.Print("按回车键退出...")
+		fmt.Scanln()
+	}
+}
+
+func (c *Config) FileHashCompare() bool {
+	file, err := os.ReadFile(c.FFmpegPath)
+	if err != nil {
+		logrus.Error("打开文件失败:", err)
+		return false
+	}
+
+	// 计算文件的SHA-256哈希值
+	hash := sha256.Sum256(file)
+	sha256Str := fmt.Sprintf("%x", hash)
+
+	return FileHashValue == sha256Str
 }
