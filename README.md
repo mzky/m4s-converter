@@ -32,22 +32,6 @@ C:\Users\mzky\Videos\bilibili\
 1332097557-1-100048.m4s // 值不固定的为视频文件
 ```
 
-自定义参数:
-```
-.\m4s-converter.exe -h
-Usage of m4s-converter.exe:
-  -c string
-        指定bilibili缓存目录 (default "C:\\Users\\mzky\\Videos\\bilibili")
-  -f string
-        指定ffmpeg路径，或将本程序访问ffmpeg.exe同目录 (default "D:\\git\\m4s-converter\\ffmpeg.exe")
-  -y    是否覆盖，默认不覆盖
-  
-.\m4s-converter.exe -f 
-.\m4s-converter.exe -f C:\ff\ffmpeg.exe 
-.\m4s-converter.exe -f C:\ff\ffmpeg.exe -y
-.\m4s-converter.exe -f C:\ff\ffmpeg.exe -c C:\Users\mzky\Videos\bilibili -y
-```
-
 验证合成：
 ```
 2023-12-05_16:02:41 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\1120254313\1120254313_nb3-1-30080.m4s-video.mp4
