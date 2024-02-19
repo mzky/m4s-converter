@@ -72,3 +72,5 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 https://github.com/nICEnnnnnnnLee/BilibiliDown
 https://github.com/leiurayer/downkyi
 ```
+
+## 弹幕xml转换为ass使用此项目： https://github.com/kafuumi/converter
