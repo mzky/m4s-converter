@@ -82,7 +82,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		fmt.Print("准备合成mp4 ...", filepath.Base(outputFile))
+		fmt.Print("准备合成", filepath.Base(outputFile))
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -98,7 +98,9 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		}
 	}()
 	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), ".ass")
-	copyFile(c.AssPath, assFile)
+	if err := copyFile(c.AssPath, assFile); err != nil {
+		logrus.Error(err)
+	}
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
 		fmt.Println()
@@ -170,12 +172,12 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 			}
 		} else {
 			// 自动下载xml弹幕文件并转换为ass
-			if Subtitle.Used {
-				//fmt.Println(joinUrl(info.Name()), info.Name(), path)
-				xmlPath := filepath.Join(path, info.Name()+".xml")
-				logrus.Info(DownloadFile(joinUrl(info.Name()), xmlPath))
-				c.AssPath = ass.Xml2ass(xmlPath)
-			}
+			//if Subtitle.Used {
+			//fmt.Println(joinUrl(info.Name()), info.Name(), path)
+			xmlPath := filepath.Join(path, info.Name()+".xml")
+			logrus.Info(DownloadFile(joinUrl(info.Name()), xmlPath))
+			c.AssPath = ass.Xml2ass(xmlPath)
+			//}
 		}
 		return nil
 	})
