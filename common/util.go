@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/windows"
 	"io"
+	"m4s-converter/ass"
 	"os"
 	"os/exec"
 	"os/user"
@@ -29,9 +30,11 @@ type Config struct {
 	CachePath  string
 	Overlay    string
 	File       *os.File
+	AssPath    string
 }
 
 func (c *Config) InitConfig() {
+	InitFlags()
 	InitLog()
 	c.GetFFmpegPath()
 	c.GetCachePath()
@@ -52,6 +55,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		"-stats",       // 只显示统计信息
 	}
 
+	//logrus.Info(c.FFMpegPath, args)
 	cmd := exec.Command(c.FFMpegPath, args...)
 
 	// 设置输出和错误流 pipe
@@ -78,7 +82,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		fmt.Print("准备合成mp4 ...")
+		fmt.Print("准备合成mp4 ...", filepath.Base(outputFile))
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -93,7 +97,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			}
 		}
 	}()
-
+	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), ".ass")
+	copyFile(c.AssPath, assFile)
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
 		fmt.Println()
@@ -144,7 +149,12 @@ func GetCacheDir(cachePath string) ([]string, error) {
 	return dirs, nil
 }
 
-func GetAudioAndVideo(cachePath string) (string, string, error) {
+func joinUrl(cid string) string {
+	//return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
+	return "https://comment.bilibili.com/" + cid + ".xml"
+}
+
+func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 	var video string
 	var audio string
 	err := filepath.Walk(cachePath, func(path string, info os.FileInfo, err error) error {
@@ -157,6 +167,14 @@ func GetAudioAndVideo(cachePath string) (string, string, error) {
 			}
 			if strings.Contains(path, "audio.mp3") {
 				audio = path
+			}
+		} else {
+			// 自动下载xml弹幕文件并转换为ass
+			if Subtitle.Used {
+				//fmt.Println(joinUrl(info.Name()), info.Name(), path)
+				xmlPath := filepath.Join(path, info.Name()+".xml")
+				logrus.Info(DownloadFile(joinUrl(info.Name()), xmlPath))
+				c.AssPath = ass.Xml2ass(xmlPath)
 			}
 		}
 		return nil
@@ -340,5 +358,33 @@ func (c *Config) LockMutex(name string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func copyFile(src, dst string) (err error) {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	// 复制文件内容
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	// 可以选择调用 Sync() 来确保数据同步到磁盘
+	err = dstFile.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

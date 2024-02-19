@@ -46,7 +46,7 @@ func main() {
 	var outputFiles []string
 	var skipFilePaths []string
 	for _, v := range dirs {
-		video, audio, e := common.GetAudioAndVideo(v)
+		video, audio, e := c.GetAudioAndVideo(v)
 		if e != nil {
 			logrus.Error("找不到已修复的音频和视频文件:", err)
 			continue
