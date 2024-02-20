@@ -73,4 +73,7 @@ https://github.com/nICEnnnnnnnLee/BilibiliDown
 https://github.com/leiurayer/downkyi
 ```
 
-## 弹幕xml转换为ass使用此项目： https://github.com/kafuumi/converter
+### 弹幕xml转换为ass使用了此项目
+```
+https://github.com/kafuumi/converter
+```
