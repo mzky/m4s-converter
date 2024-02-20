@@ -34,7 +34,6 @@ type Config struct {
 }
 
 func (c *Config) InitConfig() {
-	InitFlags()
 	InitLog()
 	c.GetFFmpegPath()
 	c.GetCachePath()

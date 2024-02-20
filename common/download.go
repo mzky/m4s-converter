@@ -25,9 +25,9 @@ func DownloadFile(url string, filepath string) error {
 		reader := flate.NewReader(req.Body)
 		defer reader.Close()
 		// 读取并解压数据
-		bodyBytes, err := io.ReadAll(reader)
-		if err != nil {
-			return err
+		bodyBytes, e := io.ReadAll(reader)
+		if e != nil {
+			return e
 		}
 		file.Write(bodyBytes)
 	} else {

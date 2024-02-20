@@ -67,13 +67,13 @@ func Xml2ass(xml string) string {
 			dotIndex = len(file)
 		}
 		dstFile = file[:dotIndex] + ".ass"
-		dst, err := os.Create(dstFile)
-		if err != nil {
+		dst, e := os.Create(dstFile)
+		if e != nil {
 			failed++
-			logrus.Println(err)
+			logrus.Println(e)
 			return dstFile
 		}
-		if err := pool.Convert(dst, assConfig); err == nil {
+		if er := pool.Convert(dst, assConfig); er == nil {
 			//fmt.Printf("[ok] %s ==> %s\n", file, dstFile)
 			success++
 		} else {
