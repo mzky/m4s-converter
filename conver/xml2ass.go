@@ -1,9 +1,10 @@
-package ass
+package conver
 
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mzky/converter"
@@ -25,20 +26,20 @@ func Xml2ass(xml string) string {
 		if xml[len(xml)-1] != os.PathSeparator {
 			xml += string(os.PathSeparator)
 		}
-		if entries, err := os.ReadDir(xml); err != nil {
-			logrus.Fatalln(err)
+		if entries, e := os.ReadDir(xml); e != nil {
+			logrus.Error(e)
 		} else {
 			for _, entry := range entries {
 				if !entry.IsDir() {
 					name := entry.Name()
-					if strings.HasSuffix(name, ".xml") {
+					if strings.HasSuffix(name, XmlSuffix) {
 						xmls = append(xmls, xml+name)
 					}
 				}
 			}
 		}
 	} else {
-		if strings.HasSuffix(xml, ".xml") {
+		if strings.HasSuffix(xml, XmlSuffix) {
 			xmls = append(xmls, xml)
 		} else {
 			logrus.Fatalln("不支持的文件格式。")
@@ -62,15 +63,11 @@ func Xml2ass(xml string) string {
 		//如果在go程中加载xml，当文件过多时会出现过高的内存占用
 		pool := converter.LoadPool(src, chain)
 		_ = src.Close()
-		dotIndex := strings.LastIndex(file, ".")
-		if dotIndex == -1 {
-			dotIndex = len(file)
-		}
-		dstFile = file[:dotIndex] + ".ass"
+
+		dstFile = strings.ReplaceAll(file, filepath.Ext(file), AssSuffix)
 		dst, e := os.Create(dstFile)
 		if e != nil {
 			failed++
-			logrus.Println(e)
 			return dstFile
 		}
 		if er := pool.Convert(dst, assConfig); er == nil {
@@ -81,6 +78,6 @@ func Xml2ass(xml string) string {
 			//fmt.Printf("[failed] %s\n", file)
 		}
 	}
-	fmt.Printf("转换ass弹幕：%d, 转换成功数：%d 转换失败数：%d\n", len(xmls), success, failed)
+	fmt.Println("转换ass弹幕:", len(xmls), "转换成功数:", success, "转换失败数:", failed)
 	return dstFile
 }

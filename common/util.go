@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/windows"
 	"io"
-	"m4s-converter/ass"
+	"m4s-converter/conver"
 	"os"
 	"os/exec"
 	"os/user"
@@ -81,7 +81,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		fmt.Print("准备合成", filepath.Base(outputFile))
+		fmt.Print("准备合成:", filepath.Base(outputFile))
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -96,8 +96,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			}
 		}
 	}()
-	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), ".ass")
-	if err := copyFile(c.AssPath, assFile); err != nil {
+	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
+	if err := copyFile(c.AssPath, assFile, func(*os.File) {}); err != nil {
 		logrus.Error(err)
 	}
 	// 等待命令执行完成
@@ -113,14 +113,16 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 		return err
 	}
 	// 查找.m4s文件
-	if filepath.Ext(info.Name()) == ".m4s" {
+	if filepath.Ext(info.Name()) == conver.M4sSuffix {
 		var dst string
 		if strings.Contains(info.Name(), "30280") { // 30280是音频文件
-			dst = src + "-audio.mp3"
+			dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
+			//dst = src + "-" + conver.AudioSuffix
 		} else {
-			dst = src + "-video.mp4"
+			dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
+			//dst = src + "-" + conver.VideoSuffix
 		}
-		if err = M4sToAudioOrVideo(src, dst); err != nil {
+		if err = M4sToAV(src, dst); err != nil {
 			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
@@ -152,7 +154,7 @@ func GetCacheDir(cachePath string) ([]string, error) {
 
 func joinUrl(cid string) string {
 	//return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
-	return "https://comment.bilibili.com/" + cid + ".xml"
+	return "https://comment.bilibili.com/" + cid + conver.XmlSuffix
 }
 
 func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
@@ -163,20 +165,20 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 			return err
 		}
 		if !info.IsDir() {
-			if strings.Contains(path, "video.mp4") {
+			if strings.Contains(path, conver.VideoSuffix) {
 				video = path
 			}
-			if strings.Contains(path, "audio.mp3") {
+			if strings.Contains(path, conver.AudioSuffix) {
 				audio = path
 			}
 		} else {
 			// 自动下载xml弹幕文件并转换为ass
-			//if Subtitle.Used {
-			//fmt.Println(joinUrl(info.Name()), info.Name(), path)
-			xmlPath := filepath.Join(path, info.Name()+".xml")
-			logrus.Info(DownloadFile(joinUrl(info.Name()), xmlPath))
-			c.AssPath = ass.Xml2ass(xmlPath)
-			//}
+			xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
+			if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
+				logrus.Warn("XML弹幕下载失败:", err)
+				return nil
+			}
+			c.AssPath = conver.Xml2ass(xmlPath)
 		}
 		return nil
 	})
@@ -186,6 +188,47 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 	}
 
 	return video, audio, nil
+}
+
+func copyFile(src, dst string, fn func(*os.File)) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	fn(srcFile)
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	// 复制文件内容
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func M4sToAV(src, dst string) error {
+	return copyFile(src, dst, func(srcFile *os.File) {
+		// 读取前9个字符
+		data := make([]byte, 9)
+		io.ReadAtLeast(srcFile, data, 9)
+		if string(data) != "000000000" {
+			logrus.Errorf("音视频文件不是9个0的头，跳过转换")
+			return
+		}
+		// 移动到第9个字节
+		_, err := srcFile.Seek(9, 0) // 从文件开头偏移
+		if err != nil {
+			logrus.Errorf("文件字节偏移失败: %v", err)
+		}
+	})
 }
 
 func M4sToAudioOrVideo(src, dst string) error {
@@ -236,7 +279,7 @@ func (c *Config) GetCachePath() {
 		c.CachePath = videosDir
 		return
 	}
-	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
+	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) || Exist(filepath.Join(c.CachePath, "load_log")) {
 		logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
 		return
 	}
@@ -294,6 +337,9 @@ func Filter(name string, err error) string {
 	name = strings.ReplaceAll(name, "|", "_")
 	name = strings.ReplaceAll(name, "?", "_")
 	name = strings.ReplaceAll(name, "*", "_")
+	name = strings.ReplaceAll(name, "【", "[")
+	name = strings.ReplaceAll(name, "】", "]")
+	name = strings.TrimSpace(name)
 
 	return name
 }
@@ -345,7 +391,7 @@ func (c *Config) SelectDirectory() {
 	win.SHGetPathFromIDList(pid, &path[0])
 
 	c.CachePath = syscall.UTF16ToString(path)
-	if Exist(filepath.Join(c.CachePath, ".videoInfo")) || Exist(filepath.Join(c.CachePath, "load_log")) {
+	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) || Exist(filepath.Join(c.CachePath, "load_log")) {
 		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
 		return
 	}
@@ -359,33 +405,5 @@ func (c *Config) LockMutex(name string) error {
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func copyFile(src, dst string) (err error) {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	// 复制文件内容
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	// 可以选择调用 Sync() 来确保数据同步到磁盘
-	err = dstFile.Sync()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/sirupsen/logrus"
 	"m4s-converter/common"
+	"m4s-converter/conver"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,7 +38,7 @@ func main() {
 
 	if dirs == nil {
 		// 判断非缓存根目录时，验证是否为子目录
-		if common.Exist(filepath.Join(c.CachePath, ".videoInfo")) {
+		if common.Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) {
 			dirs = append(dirs, c.CachePath)
 		}
 	}
@@ -51,7 +52,7 @@ func main() {
 			logrus.Error("找不到已修复的音频和视频文件:", err)
 			continue
 		}
-		info := filepath.Join(v, ".videoInfo")
+		info := filepath.Join(v, conver.VideoInfoSuffix)
 		infoStr, e := os.ReadFile(info)
 		if e != nil {
 			logrus.Error("找不到videoInfo文件: ", info)
@@ -79,7 +80,7 @@ func main() {
 				os.Exit(1)
 			}
 		}
-		outputFile := filepath.Join(groupDir, title+"-"+uname+".mp4")
+		outputFile := filepath.Join(groupDir, title+"-"+uname+conver.Mp4Suffix)
 		if er := c.Composition(video, audio, outputFile); er != nil {
 			logrus.Error("合成失败:", er)
 			continue
