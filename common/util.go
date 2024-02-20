@@ -22,7 +22,7 @@ var ffmpegFile embed.FS
 
 var (
 	FFmpegName    = "ffmpeg.exe"
-	FileHashValue = "F609B2C460ADC9BA914CA59CD2A75CC706E2F6E3A7B90D1EEEE1BF6E8A8AA0E0"
+	FileHashValue = "3b805cb66ebb0e68f19c939bece693c345b15b7bf277b572ab7b4792ee65aad8"
 )
 
 type Config struct {
@@ -81,7 +81,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 读取并打印错误流
 	go func() {
-		fmt.Print("准备合成:", filepath.Base(outputFile))
+		fmt.Println("准备合成:", filepath.Base(outputFile))
 		for {
 			buf := make([]byte, 1024)
 			n, e := stderr.Read(buf)
@@ -89,9 +89,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 				return
 			}
 			cmdErr := string(buf[:n])
-			fmt.Print(".")
 			if strings.Contains(cmdErr, "exists") {
-				fmt.Println()
 				logrus.Warn("跳过已经存在的音视频文件:", filepath.Base(outputFile))
 			}
 		}
@@ -363,7 +361,7 @@ func (c *Config) FileHashCompare() bool {
 	hash := sha256.Sum256(file)
 	sha256Str := fmt.Sprintf("%x", hash)
 
-	return FileHashValue == strings.ToUpper(sha256Str)
+	return FileHashValue == sha256Str
 }
 
 func _TEXT(str string) *uint16 {
