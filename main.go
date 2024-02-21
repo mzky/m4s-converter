@@ -73,14 +73,14 @@ func main() {
 		if !common.Exist(outputDir) {
 			os.Mkdir(outputDir, os.ModePerm)
 		}
-		groupDir := filepath.Join(outputDir, groupTitle)
+		groupDir := filepath.Join(outputDir, groupTitle+"-"+uname)
 		if !common.Exist(groupDir) {
 			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
 				c.MessageBox("无法创建目录：" + groupDir)
 				os.Exit(1)
 			}
 		}
-		outputFile := filepath.Join(groupDir, title+"-"+uname+conver.Mp4Suffix)
+		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
 		if er := c.Composition(video, audio, outputFile); er != nil {
 			logrus.Error("合成失败:", er)
 			continue
