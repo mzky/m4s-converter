@@ -8,30 +8,47 @@ import (
 )
 
 func DownloadFile(url string, filepath string) error {
-	req, err := http.Get(url)
+	// 发起HTTP GET请求
+	httpReq, err := http.Get(url)
 	if err != nil {
 		return err
 	}
-	defer req.Body.Close()
-	// 创建文件
-	file, err := os.Create(filepath)
+	defer httpReq.Body.Close()
+
+	// 创建本地文件
+	localFile, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer localFile.Close()
+
 	// 检查Content-Encoding是否为deflate
-	contentEncoding := req.Header.Get("Content-Encoding")
+	contentEncoding := httpReq.Header.Get("Content-Encoding")
 	if contentEncoding == "deflate" {
-		reader := flate.NewReader(req.Body)
+		// 如果是deflate编码，解压缩数据
+		reader := flate.NewReader(httpReq.Body)
 		defer reader.Close()
+
 		// 读取并解压数据
-		bodyBytes, e := io.ReadAll(reader)
-		if e != nil {
-			return e
+		bodyBytes, err := io.ReadAll(reader)
+		if err != nil {
+			return err
 		}
-		file.Write(bodyBytes)
+
+		// 将解压后的数据写入本地文件
+		if _, err := localFile.Write(bodyBytes); err != nil {
+			return err
+		}
 	} else {
-		file.Write([]byte(contentEncoding))
+		// 如果不是deflate编码，直接将Content-Encoding写入文件
+		if _, err := localFile.Write([]byte(contentEncoding)); err != nil {
+			return err
+		}
+	}
+
+	// 检查文件是否成功写入
+	if err := localFile.Sync(); err != nil {
+		return err
 	}
 
 	return nil
