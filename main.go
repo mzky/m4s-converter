@@ -7,6 +7,7 @@ import (
 	"m4s-converter/common"
 	"m4s-converter/conver"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ func main() {
 	}
 
 	// 合成音视频文件
+	var outputDir string
 	var outputFiles []string
 	var skipFilePaths []string
 	for _, v := range dirs {
@@ -69,7 +71,7 @@ func main() {
 			logrus.Warn("未缓存完成,跳过合成", v, title+"-"+uname)
 			continue
 		}
-		outputDir := filepath.Join(filepath.Dir(v), "output")
+		outputDir = filepath.Join(filepath.Dir(v), "output")
 		if !common.Exist(outputDir) {
 			os.Mkdir(outputDir, os.ModePerm)
 		}
@@ -95,6 +97,8 @@ func main() {
 	}
 	if outputFiles != nil {
 		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
+		// 打开合成文件目录
+		go exec.Command("explorer", outputDir).Start()
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
