@@ -24,7 +24,7 @@ C:\Users\mzky\Videos\bilibili\
 }
 ```
 
-转换后的文件命名规则：title-uname.mp4
+转换后合成的文件夹名称：groupTitle-uname  视频名称：title.mp4
 
 ```
 文件名识别：
