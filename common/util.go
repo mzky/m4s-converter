@@ -275,14 +275,30 @@ func (c *Config) GetCachePath() {
 	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
 	if Exist(videosDir) {
 		c.CachePath = videosDir
-		return
 	}
-	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) || Exist(filepath.Join(c.CachePath, "load_log")) {
+
+	if findM4sFiles(c.CachePath) == nil {
 		logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
 		return
 	}
-	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + " ，请选择 bilibili 当前设置的缓存路径！")
+	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
 	c.SelectDirectory()
+}
+
+func findM4sFiles(directory string) error {
+	if err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
+			return nil
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return fmt.Errorf("找不到缓存目录: %s", directory)
 }
 
 func (c *Config) GetFFmpegPath() {
