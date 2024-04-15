@@ -3,6 +3,7 @@ package common
 import (
 	"crypto/sha256"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"github.com/lxn/win"
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -68,32 +70,11 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	}
 
 	// 读取并打印输出流
-	go func() {
-		for {
-			buf := make([]byte, 1024)
-			n, e := stdout.Read(buf)
-			if e != nil {
-				return
-			}
-			fmt.Print(string(buf[:n]))
-		}
-	}()
+	go printOutput(stdout)
 
 	// 读取并打印错误流
-	go func() {
-		fmt.Println("准备合成:", filepath.Base(outputFile))
-		for {
-			buf := make([]byte, 1024)
-			n, e := stderr.Read(buf)
-			if e != nil {
-				return
-			}
-			cmdErr := string(buf[:n])
-			if strings.Contains(cmdErr, "exists") {
-				logrus.Warn("跳过已经存在的音视频文件:", filepath.Base(outputFile))
-			}
-		}
-	}()
+	go printError(stderr, outputFile)
+
 	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
 	if err := copyFile(c.AssPath, assFile, func(*os.File) {}); err != nil {
 		logrus.Error(err)
@@ -113,13 +94,25 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 	// 查找.m4s文件
 	if filepath.Ext(info.Name()) == conver.M4sSuffix {
 		var dst string
-		if strings.Contains(info.Name(), "30280") { // 30280是音频文件
-			dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
-			//dst = src + "-" + conver.AudioSuffix
-		} else {
-			dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
-			//dst = src + "-" + conver.VideoSuffix
+		if videoId, audioId := GetVAId(src); videoId != "" && audioId != "" {
+			conver.VideoFileID = videoId
+			conver.VideoFileID = audioId
+			if strings.Contains(info.Name(), audioId) { // 音频文件
+				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
+				//dst = src + "-" + conver.AudioSuffix
+			}
+			if strings.Contains(info.Name(), videoId) { // 视频文件
+				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
+				//dst = src + "-" + conver.VideoSuffix
+			}
 		}
+		//if strings.Contains(info.Name(), conver.AudioFileID) { // 大部分30280是音频文件
+		//	dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
+		//	//dst = src + "-" + conver.AudioSuffix
+		//} else {
+		//	dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
+		//	//dst = src + "-" + conver.VideoSuffix
+		//}
 		if err = M4sToAV(src, dst); err != nil {
 			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
@@ -439,4 +432,52 @@ func (c *Config) LockMutex(name string) error {
 		return err
 	}
 	return nil
+}
+
+func printOutput(stdout io.ReadCloser) {
+	buf := make([]byte, 1024)
+	for {
+		n, e := stdout.Read(buf)
+		if e != nil {
+			//logrus.Error("读取标准输出错误:", e)
+			return
+		}
+		if n > 0 {
+			fmt.Print(string(buf[:n]))
+		}
+	}
+}
+
+func printError(stderr io.ReadCloser, outputFile string) {
+	fmt.Println("准备合成:", filepath.Base(outputFile))
+	buf := make([]byte, 1024)
+	for {
+		n, e := stderr.Read(buf)
+		if e != nil {
+			//logrus.Error("读取标准错误输出错误:", e)
+			return
+		}
+		if n > 0 {
+			cmdErr := string(buf[:n])
+			if strings.Contains(cmdErr, "exists") {
+				logrus.Warn("跳过已经存在的音视频文件:", filepath.Base(outputFile))
+			}
+		}
+	}
+}
+
+// GetVAId 返回.playurl文件中视频文件或音频文件件数组
+func GetVAId(patch string) (videoID string, audioID string) {
+	pu := filepath.Join(filepath.Dir(patch), conver.PlayUrlSuffix)
+	puDate, e := os.ReadFile(pu)
+	if e != nil {
+		logrus.Error("找不到.playurl文件: ", pu)
+		return
+	}
+	var p conver.PlayUrl
+	_ = json.Unmarshal(puDate, &p)
+	audioID = strconv.Itoa(p.Data.Dash.Audio[0].ID)
+	videoID = strconv.Itoa(p.Data.Dash.Video[0].ID + 30000)
+
+	return
 }
