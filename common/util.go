@@ -155,37 +155,47 @@ func joinUrl(cid string) string {
 	return "https://comment.bilibili.com/" + cid + conver.XmlSuffix
 }
 
+// GetAudioAndVideo 从给定的缓存路径中查找音频和视频文件，并尝试下载并转换xml弹幕为ass格式
+// 参数:
+// - cachePath: 缓存路径，用于搜索音频、视频文件以及存储下载的弹幕文件
+// 返回值:
+// - video: 查找到的视频文件路径
+// - audio: 查找到的音频文件路径
+// - error: 在搜索、下载或转换过程中遇到的任何错误
 func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 	var video string
 	var audio string
+
+	// 遍历给定路径下的所有文件和目录
 	err := filepath.Walk(cachePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return err // 如果遇到错误，立即返回
 		}
 		if !info.IsDir() {
+			// 如果是文件，检查是否为视频或音频文件
 			if strings.Contains(path, conver.VideoSuffix) {
-				video = path
+				video = path // 找到视频文件
 			}
 			if strings.Contains(path, conver.AudioSuffix) {
-				audio = path
+				audio = path // 找到音频文件
 			}
 		} else {
-			// 自动下载xml弹幕文件并转换为ass
+			// 如果是目录，尝试下载并转换xml弹幕为ass格式
 			xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
 			if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
-				logrus.Warn("XML弹幕下载失败:", err)
+				logrus.Warn("XML弹幕下载失败:", err) // 记录下载失败的日志
 				return nil
 			}
-			c.AssPath = conver.Xml2ass(xmlPath)
+			c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
 		}
 		return nil
 	})
 
 	if err != nil {
-		return "", "", err
+		return "", "", err // 如果遍历过程中发生错误，返回错误信息
 	}
 
-	return video, audio, nil
+	return video, audio, nil // 返回找到的视频和音频文件路径
 }
 
 func copyFile(src, dst string, fn func(*os.File)) error {
@@ -265,6 +275,7 @@ func M4sToAudioOrVideo(src, dst string) error {
 	return nil
 }
 
+// GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
 	u, err := user.Current()
 	if err != nil {
@@ -285,6 +296,7 @@ func (c *Config) GetCachePath() {
 	c.SelectDirectory()
 }
 
+// 查找 m4s 文件
 func findM4sFiles(directory string) error {
 	if err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -301,6 +313,7 @@ func findM4sFiles(directory string) error {
 	return fmt.Errorf("找不到缓存目录: %s", directory)
 }
 
+// GetFFmpegPath 获取 ffmpeg 路径
 func (c *Config) GetFFmpegPath() {
 	wd, _ := os.Getwd()
 	c.FFMpegPath = filepath.Join(wd, FFmpegName) // 指定ffmpeg路径
@@ -319,6 +332,7 @@ func (c *Config) GetFFmpegPath() {
 	}
 }
 
+// DecFile 解压ffmpeg.exe
 func DecFile() error {
 	file, err := ffmpegFile.Open(FFmpegName)
 	if err != nil {
@@ -342,6 +356,7 @@ func Exist(path string) bool {
 	return true
 }
 
+// Filter 过滤文件名
 func Filter(name string, err error) string {
 	name = strings.ReplaceAll(name, "<", "《")
 	name = strings.ReplaceAll(name, ">", "》")
@@ -390,6 +405,7 @@ func (c *Config) MessageBox(text string) {
 	win.MessageBox(win.HWND_TOP, _TEXT(text), _TEXT("消息"), win.MB_ICONWARNING)
 }
 
+// SelectDirectory 选择bilimini缓存目录
 func (c *Config) SelectDirectory() {
 	var bsi win.BROWSEINFO
 	bsi.LpszTitle = _TEXT("请选择 bilibili 缓存目录")
@@ -399,13 +415,16 @@ func (c *Config) SelectDirectory() {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
+
 	defer win.CoTaskMemFree(pid)
 
 	path := make([]uint16, win.MAX_PATH)
 	win.SHGetPathFromIDList(pid, &path[0])
 
 	c.CachePath = syscall.UTF16ToString(path)
-	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) || Exist(filepath.Join(c.CachePath, "load_log")) {
+	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
+		Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) ||
+		Exist(filepath.Join(c.CachePath, "load_log")) {
 		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
 		return
 	}

@@ -20,7 +20,7 @@ func main() {
 	defer c.File.Close()
 
 	if c.LockMutex("m4sTool") != nil {
-		//c.MessageBox("只能运行一个实例！")
+		c.MessageBox("只能运行一个实例！")
 		os.Exit(1)
 	}
 
@@ -29,18 +29,19 @@ func main() {
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
 		c.MessageBox(fmt.Sprintf("找不到 bilibili 目录下的 m4s 文件：%v", err))
-		os.Exit(1)
+		wait()
 	}
 
 	dirs, err := common.GetCacheDir(c.CachePath) // 缓存根目录模式
 	if err != nil {
 		c.MessageBox(fmt.Sprintf("找不到 bilibili 的缓存目录：%v", err))
-		os.Exit(1)
+		wait()
 	}
 
 	if dirs == nil {
 		// 判断非缓存根目录时，验证是否为子目录
-		if common.Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) {
+		if common.Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
+			common.Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) {
 			dirs = append(dirs, c.CachePath)
 		}
 	}
@@ -56,9 +57,12 @@ func main() {
 			continue
 		}
 		info := filepath.Join(v, conver.VideoInfoSuffix)
+		if !common.Exist(info) {
+			info = filepath.Join(v, conver.VideoInfoJson)
+		}
 		infoStr, e := os.ReadFile(info)
 		if e != nil {
-			logrus.Error("找不到videoInfo文件: ", info)
+			logrus.Error("找不到videoInfo相关文件: ", info)
 			continue
 		}
 		js, _ := simplejson.NewJson(infoStr)
@@ -80,7 +84,7 @@ func main() {
 		if !common.Exist(groupDir) {
 			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
 				c.MessageBox("无法创建目录：" + groupDir)
-				os.Exit(1)
+				wait()
 			}
 		}
 		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
@@ -106,7 +110,11 @@ func main() {
 	logrus.Print("已完成本次任务，耗时:", end-begin, "秒")
 	logrus.Print("==========================================")
 
+	wait()
+}
+
+func wait() {
 	fmt.Print("按回车键退出...")
-	c.File.Close()
 	fmt.Scanln()
+	os.Exit(0)
 }
