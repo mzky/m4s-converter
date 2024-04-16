@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"embed"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/lxn/win"
 	"github.com/sirupsen/logrus"
@@ -38,9 +39,26 @@ type Config struct {
 
 func (c *Config) InitConfig() {
 	InitLog()
-	c.GetFFmpegPath()
-	c.GetCachePath()
+	overlay := flag.Bool("o", false, "是否覆盖已存在的视频，默认不覆盖") //nolint
+	c.AssOFF = *flag.Bool("a", false, "是否关闭自动生成ass弹幕，默认不关闭")
+	c.FFMpegPath = *flag.String("f", "", "指定FFMpeg路径，默认使用自带的FFMpeg文件")
+	c.CachePath = *flag.String("c", "", "指定缓存路径，默认使用bilibili默认缓存路径")
+	version := flag.Bool("v", false, "查看版本号")
+	flag.Parse()
+	if *version {
+		fmt.Println("Version:", "1.3.2")
+		os.Exit(0)
+	}
+	if c.FFMpegPath == "" {
+		c.GetFFmpegPath()
+	}
+	if c.CachePath == "" {
+		c.GetCachePath()
+	}
 	c.Overlay = "-n"
+	if *overlay {
+		c.Overlay = "-y"
+	}
 }
 
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
@@ -166,12 +184,14 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 			}
 		} else {
 			// 如果是目录，尝试下载并转换xml弹幕为ass格式
-			xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
-			if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
-				logrus.Warn("XML弹幕下载失败:", err) // 记录下载失败的日志
-				return nil
+			if !c.AssOFF {
+				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
+				if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
+					logrus.Warn("XML弹幕下载失败:", err) // 记录下载失败的日志
+					return nil
+				}
+				c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
 			}
-			c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
 		}
 		return nil
 	})
