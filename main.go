@@ -16,6 +16,7 @@ import (
 func main() {
 	var c common.Config
 	c.InitConfig()
+
 	defer c.PanicHandler()
 	defer c.File.Close()
 

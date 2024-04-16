@@ -33,6 +33,7 @@ type Config struct {
 	Overlay    string
 	File       *os.File
 	AssPath    string
+	AssOFF     bool
 }
 
 func (c *Config) InitConfig() {
@@ -99,20 +100,11 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 			conver.VideoFileID = audioId
 			if strings.Contains(info.Name(), audioId) { // 音频文件
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
-				//dst = src + "-" + conver.AudioSuffix
 			}
 			if strings.Contains(info.Name(), videoId) { // 视频文件
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
-				//dst = src + "-" + conver.VideoSuffix
 			}
 		}
-		//if strings.Contains(info.Name(), conver.AudioFileID) { // 大部分30280是音频文件
-		//	dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
-		//	//dst = src + "-" + conver.AudioSuffix
-		//} else {
-		//	dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
-		//	//dst = src + "-" + conver.VideoSuffix
-		//}
 		if err = M4sToAV(src, dst); err != nil {
 			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
@@ -197,7 +189,6 @@ func copyFile(src, dst string, fn func(*os.File)) error {
 		return err
 	}
 	defer srcFile.Close()
-
 	fn(srcFile)
 
 	dstFile, err := os.Create(dst)
@@ -219,7 +210,7 @@ func M4sToAV(src, dst string) error {
 	return copyFile(src, dst, func(srcFile *os.File) {
 		// 读取前9个字符
 		data := make([]byte, 9)
-		io.ReadAtLeast(srcFile, data, 9)
+		_, _ = io.ReadAtLeast(srcFile, data, 9)
 		if string(data) != "000000000" {
 			logrus.Errorf("音视频文件不是9个0的头，跳过转换")
 			return
@@ -232,42 +223,6 @@ func M4sToAV(src, dst string) error {
 	})
 }
 
-func M4sToAudioOrVideo(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("打开文件失败: %v", err)
-	}
-	defer srcFile.Close()
-
-	// 读取前9个字符
-	data := make([]byte, 9)
-	io.ReadAtLeast(srcFile, data, 9)
-	if string(data) != "000000000" {
-		return fmt.Errorf("音视频文件不是9个0的头，跳过转换")
-	}
-
-	// 移动到第9个字节
-	_, err = srcFile.Seek(9, 0) // 从文件开头偏移
-	if err != nil {
-		return fmt.Errorf("文件字节偏移失败: %v", err)
-	}
-
-	// 创建新文件
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("创建新文件失败: %v", err)
-	}
-	defer dstFile.Close()
-
-	// 将截取后的内容写入新文件
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return fmt.Errorf("写入文件失败: %v", err)
-	}
-
-	return nil
-}
-
 // GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
 	u, err := user.Current()
@@ -277,33 +232,37 @@ func (c *Config) GetCachePath() {
 	}
 
 	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
-	if Exist(videosDir) {
-		c.CachePath = videosDir
-	}
-
-	if findM4sFiles(c.CachePath) == nil {
-		logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
+	if findM4sFiles(videosDir) != nil {
+		c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
+		c.SelectDirectory()
 		return
 	}
-	c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
-	c.SelectDirectory()
+	c.CachePath = videosDir
+	logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
+	return
+
 }
 
 // 查找 m4s 文件
 func findM4sFiles(directory string) error {
-	if err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+	var m4sFiles []string
+	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
+			m4sFiles = append(m4sFiles, path)
 			return nil
 		}
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
-
-	return fmt.Errorf("找不到缓存目录: %s", directory)
+	if len(m4sFiles) == 0 {
+		return fmt.Errorf("找不到缓存目录: %s", directory)
+	}
+	return nil
 }
 
 // GetFFmpegPath 获取 ffmpeg 路径
@@ -476,8 +435,6 @@ func GetVAId(patch string) (videoID string, audioID string) {
 	}
 	var p conver.PlayUrl
 	_ = json.Unmarshal(puDate, &p)
-	audioID = strconv.Itoa(p.Data.Dash.Audio[0].ID)
-	videoID = strconv.Itoa(p.Data.Dash.Video[0].ID + 30000)
 
-	return
+	return strconv.Itoa(p.Data.Dash.Video[0].ID + 30000), strconv.Itoa(p.Data.Dash.Audio[0].ID)
 }
