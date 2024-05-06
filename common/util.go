@@ -114,12 +114,9 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 	if filepath.Ext(info.Name()) == conver.M4sSuffix {
 		var dst string
 		if videoId, audioId := GetVAId(src); videoId != "" && audioId != "" {
-			conver.VideoFileID = videoId
-			conver.VideoFileID = audioId
 			if strings.Contains(info.Name(), audioId) { // 音频文件
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
-			}
-			if strings.Contains(info.Name(), videoId) { // 视频文件
+			} else {
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
 			}
 		}
@@ -454,7 +451,10 @@ func GetVAId(patch string) (videoID string, audioID string) {
 		return
 	}
 	var p conver.PlayUrl
-	_ = json.Unmarshal(puDate, &p)
+	if err := json.Unmarshal(puDate, &p); err != nil {
+		logrus.Error("解析.playurl文件失败: ", err)
+		return
+	}
 
-	return strconv.Itoa(p.Data.Dash.Video[0].ID + 30000), strconv.Itoa(p.Data.Dash.Audio[0].ID)
+	return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
 }

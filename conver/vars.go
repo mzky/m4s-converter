@@ -18,7 +18,6 @@ var (
 		    data.dash.video[].id
 			data.dash.audio[].id
 	*/
-	VideoFileID = ""
 	AudioFileID = "30280"
 )
 

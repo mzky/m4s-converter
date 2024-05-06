@@ -57,16 +57,20 @@ func main() {
 			logrus.Error("找不到已修复的音频和视频文件:", err)
 			continue
 		}
-		info := filepath.Join(v, conver.VideoInfoSuffix)
+		info := filepath.Join(v, conver.VideoInfoJson)
 		if !common.Exist(info) {
-			info = filepath.Join(v, conver.VideoInfoJson)
+			info = filepath.Join(v, conver.VideoInfoSuffix)
 		}
 		infoStr, e := os.ReadFile(info)
 		if e != nil {
 			logrus.Error("找不到videoInfo相关文件: ", info)
 			continue
 		}
-		js, _ := simplejson.NewJson(infoStr)
+		js, errb := simplejson.NewJson(infoStr)
+		if errb != nil {
+			logrus.Error("videoInfo相关文件解析失败: ", info)
+			continue
+		}
 		groupTitle := common.Filter(js.Get("groupTitle").String())
 		title := common.Filter(js.Get("title").String())
 		uname := common.Filter(js.Get("uname").String())
