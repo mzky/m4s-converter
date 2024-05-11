@@ -1,7 +1,7 @@
 # m4s-converter
 
 ## 为什么开发此程序？
-bilibili下架了很多视频，之前收藏和缓存（ipad）的均无法播放，
+bilibili下架了很多视频，之前收藏和缓存的视频均无法播放，
 ![image](https://github.com/mzky/m4s-converter/assets/13345233/ea8bc799-e47d-40ca-bde4-c47193f0e453)
 
 喜欢的视频赶紧缓存起来，使用本程序将bilibili缓存的m4s转成mp4，以便后续播放
