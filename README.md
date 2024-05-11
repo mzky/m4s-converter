@@ -7,7 +7,7 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放，
 喜欢的视频赶紧缓存起来，使用本程序将bilibili缓存的m4s转成mp4，以便后续播放
 
 ## 下载使用
-https://github.com/mzky/m4s-converter/releases
+https://github.com/mzky/m4s-converter/releases/latest
 
 下载exe文件，双击运行即可
 
