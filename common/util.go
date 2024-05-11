@@ -46,7 +46,7 @@ func (c *Config) InitConfig() {
 	version := flag.Bool("v", false, "查看版本号")
 	flag.Parse()
 	if *version {
-		fmt.Println("Version:", "1.3.2")
+		fmt.Println("Version:", "1.3.5")
 		os.Exit(0)
 	}
 	if c.FFMpegPath == "" {
