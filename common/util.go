@@ -327,26 +327,29 @@ func Exist(path string) bool {
 
 // Filter 过滤文件名
 func Filter(name string, err error) string {
+	if err != nil {
+		logrus.Error(err)
+	}
 	name = strings.ReplaceAll(name, "<", "《")
 	name = strings.ReplaceAll(name, ">", "》")
 	name = strings.ReplaceAll(name, `\`, "#")
 	name = strings.ReplaceAll(name, `"`, "'")
-	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, "/", "#")
 	name = strings.ReplaceAll(name, "|", "_")
-	name = strings.ReplaceAll(name, "?", "_")
-	name = strings.ReplaceAll(name, "*", "_")
+	name = strings.ReplaceAll(name, "?", "？")
+	name = strings.ReplaceAll(name, "*", "-")
 	name = strings.ReplaceAll(name, "【", "[")
 	name = strings.ReplaceAll(name, "】", "]")
-	name = strings.TrimSpace(name)
+	name = strings.ReplaceAll(name, ":", "：")
 
-	return name
+	return strings.TrimSpace(name)
 }
 
 func (c *Config) PanicHandler() {
 	if e := recover(); e != nil {
-		c.File.Close()
+		_ = c.File.Close()
 		fmt.Print("按回车键退出...")
-		fmt.Scanln()
+		_, _ = fmt.Scanln()
 	}
 }
 

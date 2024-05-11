@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -66,15 +67,17 @@ func main() {
 			logrus.Error("找不到videoInfo相关文件: ", info)
 			continue
 		}
-		js, errb := simplejson.NewJson(infoStr)
-		if errb != nil {
+		js, e := simplejson.NewJson(infoStr)
+		if e != nil {
 			logrus.Error("videoInfo相关文件解析失败: ", info)
 			continue
 		}
+
 		groupTitle := common.Filter(js.Get("groupTitle").String())
 		title := common.Filter(js.Get("title").String())
 		uname := common.Filter(js.Get("uname").String())
 		status := common.Filter(js.Get("status").String())
+		itemId, _ := js.Get("itemId").Int()
 
 		if status != "completed" {
 			skipFilePaths = append(skipFilePaths, v)
@@ -83,7 +86,7 @@ func main() {
 		}
 		outputDir = filepath.Join(filepath.Dir(v), "output")
 		if !common.Exist(outputDir) {
-			os.Mkdir(outputDir, os.ModePerm)
+			_ = os.Mkdir(outputDir, os.ModePerm)
 		}
 		groupDir := filepath.Join(outputDir, groupTitle+"-"+uname)
 		if !common.Exist(groupDir) {
@@ -93,6 +96,9 @@ func main() {
 			}
 		}
 		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
+		if common.Exist(outputFile) {
+			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
+		}
 		if er := c.Composition(video, audio, outputFile); er != nil {
 			logrus.Error("合成失败:", er)
 			continue
@@ -120,6 +126,6 @@ func main() {
 
 func wait() {
 	fmt.Print("按回车键退出...")
-	fmt.Scanln()
+	_, _ = fmt.Scanln()
 	os.Exit(0)
 }
