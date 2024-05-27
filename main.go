@@ -27,7 +27,7 @@ func main() {
 	}
 
 	begin := time.Now().Unix()
-
+	fmt.Println("查找缓存目录下可转换的文件...")
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
 		c.MessageBox(fmt.Sprintf("找不到 bilibili 目录下的 m4s 文件：%v", err))
