@@ -9,34 +9,40 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放，
 ## 下载使用
 https://github.com/mzky/m4s-converter/releases/latest
 
-下载exe文件，双击运行即可
+下载后可直接执行，双击或命令行运行即可
 
 ```
-批量目录识别，比如：
+程序在windows下能够自动识别默认的bilibli缓存目录，比如：
 C:\Users\mzky\Videos\bilibili\
+其它系统或者自定义的bilibili缓存路径，请根据提示手动选择目录
+```
+
+## 非windows系统，需要手动安装ffmpeg（大部分桌面系统默认已安装），或指定ffmpeg路径
+
+-- UOS/Kylin/Ubuntu/Debian等桌面版系统
+```
+sudo apt-get install ffmpeg
+```
+-- OpenEuler/CentOS8等
+```
+yum install ffmpeg
+```
+-- Mac OS
+```
+brew install ffmpeg
 ```
 
 ```
-{
-"groupId": 1582186,
-"itemId ":1332097557,
-"aid": 620879911,
-"cid": 1332097557, // 文件夹名
-"uname": "珂姬与科技", // 上传的用户名
-"title": "蛇的“工作原理”",// 单个视频名称
-"groupTitle": "3D动画之工作原理", // 视频组名称
-"status": "downloading",// downloading正在缓存中；pending等待缓存（还没有缓存文件）；completed缓存完成
-}
-```
-
-转换后合成的文件夹名称：groupTitle-uname  视频名称：title.mp4
-
-```
-文件名识别：
-1332097557-1-30280.m4s // 30280大部分为音频文件
-1332097557-1-100048.m4s // 值不固定的为视频文件
-
-识别不准确，改为通过读取.playurl文件进行解析
+# 指定FFMpeg路径，例如: ./m4s-converter-amd64 -c /mnt/bilibili
+# 其它可用参数：
+Usage of ./m4s-converter-amd64:
+  -a    是否关闭自动生成ass弹幕，默认不关闭
+  -c string
+        指定缓存路径，默认使用BiliBili默认缓存路径
+  -f string
+        自定义FFMpeg文件路径
+  -o    是否覆盖已存在的视频，默认不覆盖
+  -v    查看版本号
 ```
 
 验证合成：
