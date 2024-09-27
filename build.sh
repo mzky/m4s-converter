@@ -1,9 +1,9 @@
 #!/bin/bash
 echo build for Linux-amd64 ...
-GOOS=linux GOARCH=amd64 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux-amd64 main.go
+GOOS=linux GOARCH=amd64 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux_amd64 main.go
 #
 echo build for Linux-arm64 ...
-GOOS=linux GOARCH=arm64 GOARM=8 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux-arm64 main.go
+GOOS=linux GOARCH=arm64 GOARM=8 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux_arm64 main.go
 # 压缩
 upx --lzma  m4s-converter-*
 
