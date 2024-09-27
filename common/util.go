@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/ncruces/zenity"
 	"github.com/sirupsen/logrus"
-	"github.com/sqweek/dialog"
 	"io"
 	"m4s-converter/conver"
 	"m4s-converter/internal"
@@ -312,13 +312,13 @@ func (c *Config) PanicHandler() {
 }
 
 func (c *Config) MessageBox(text string) {
-	logrus.Error(text)
-	dialog.Message(text).Title("消息").Info()
+	logrus.Warn(text)
+	zenity.Warning(text, zenity.Title("提示"))
 }
 
-// SelectDirectory 选择bilimini缓存目录
+// SelectDirectory 选择BiliBili缓存目录
 func (c *Config) SelectDirectory() {
-	file, err := dialog.Directory().Title("请选择 bilibili 缓存目录").Browse()
+	file, err := zenity.SelectFile(zenity.Title("请选择 bilibili 缓存目录"), zenity.Directory())
 	if file == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
