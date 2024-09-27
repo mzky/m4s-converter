@@ -33,7 +33,7 @@ brew install ffmpeg
 ```
 
 ```
-# 指定FFMpeg路径，例如: ./m4s-converter-amd64 -c /mnt/bilibili
+# 指定FFMpeg路径，例如: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
 # 其它可用参数：
 Usage of ./m4s-converter-amd64:
   -a    是否关闭自动生成ass弹幕，默认不关闭
