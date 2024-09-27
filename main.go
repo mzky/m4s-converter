@@ -21,11 +21,6 @@ func main() {
 	defer c.PanicHandler()
 	defer c.File.Close()
 
-	if c.LockMutex("m4sTool") != nil {
-		c.MessageBox("只能运行一个实例！")
-		os.Exit(1)
-	}
-
 	begin := time.Now().Unix()
 	fmt.Println("查找缓存目录下可转换的文件...")
 	// 查找m4s文件，并转换为mp4和mp3

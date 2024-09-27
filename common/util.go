@@ -1,30 +1,23 @@
 package common
 
 import (
-	"crypto/sha256"
-	"embed"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/lxn/win"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/windows"
+	"github.com/sqweek/dialog"
 	"io"
 	"m4s-converter/conver"
+	"m4s-converter/internal"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
-//go:embed ffmpeg.exe
-var ffmpegFile embed.FS
-
 var (
-	FFmpegName    = "ffmpeg.exe"
 	FileHashValue = "3b805cb66ebb0e68f19c939bece693c345b15b7bf277b572ab7b4792ee65aad8"
 )
 
@@ -41,8 +34,8 @@ func (c *Config) InitConfig() {
 	InitLog()
 	overlay := flag.Bool("o", false, "是否覆盖已存在的视频，默认不覆盖") //nolint
 	c.AssOFF = *flag.Bool("a", false, "是否关闭自动生成ass弹幕，默认不关闭")
-	c.FFMpegPath = *flag.String("f", "", "指定FFMpeg路径，默认使用自带的FFMpeg文件")
-	c.CachePath = *flag.String("c", "", "指定缓存路径，默认使用bilibili默认缓存路径")
+	c.FFMpegPath = *flag.String("f", "", "自定义FFMpeg文件路径")
+	c.CachePath = *flag.String("c", "", "指定缓存路径，默认使用BiliBili默认缓存路径")
 	version := flag.Bool("v", false, "查看版本号")
 	flag.Parse()
 	if *version {
@@ -50,7 +43,7 @@ func (c *Config) InitConfig() {
 		os.Exit(0)
 	}
 	if c.FFMpegPath == "" {
-		c.GetFFmpegPath()
+		c.FFMpegPath = internal.GetFFMpeg()
 	}
 	if c.CachePath == "" {
 		c.GetCachePath()
@@ -282,41 +275,6 @@ func findM4sFiles(directory string) error {
 	return nil
 }
 
-// GetFFmpegPath 获取 ffmpeg 路径
-func (c *Config) GetFFmpegPath() {
-	wd, _ := os.Getwd()
-	c.FFMpegPath = filepath.Join(wd, FFmpegName) // 指定ffmpeg路径
-	if !Exist(c.FFMpegPath) {
-		logrus.Info("第一次运行,自动释放ffmpeg.exe")
-		if err := DecFile(); err != nil {
-			logrus.Error(err)
-		}
-	}
-	if !c.FileHashCompare() {
-		logrus.Info("文件不完整,重新释放ffmpeg.exe")
-		if err := DecFile(); err != nil {
-			logrus.Error(err)
-			return
-		}
-	}
-}
-
-// DecFile 解压ffmpeg.exe
-func DecFile() error {
-	file, err := ffmpegFile.Open(FFmpegName)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// 使用文件
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(FFmpegName, data, os.ModePerm)
-}
-
 func Exist(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
@@ -353,47 +311,20 @@ func (c *Config) PanicHandler() {
 	}
 }
 
-func (c *Config) FileHashCompare() bool {
-	file, err := os.ReadFile(c.FFMpegPath)
-	if err != nil {
-		logrus.Error("打开文件失败:", err)
-		return false
-	}
-
-	// 计算文件的SHA-256哈希值
-	hash := sha256.Sum256(file)
-	sha256Str := fmt.Sprintf("%x", hash)
-
-	return FileHashValue == sha256Str
-}
-
-func _TEXT(str string) *uint16 {
-	ptr, _ := syscall.UTF16PtrFromString(str)
-	return ptr
-}
-
 func (c *Config) MessageBox(text string) {
 	logrus.Error(text)
-	win.MessageBox(win.HWND_TOP, _TEXT(text), _TEXT("消息"), win.MB_ICONWARNING)
+	dialog.Message(text).Title("消息").Info()
 }
 
 // SelectDirectory 选择bilimini缓存目录
 func (c *Config) SelectDirectory() {
-	var bsi win.BROWSEINFO
-	bsi.LpszTitle = _TEXT("请选择 bilibili 缓存目录")
-
-	pid := win.SHBrowseForFolder(&bsi)
-	if pid == 0 {
+	file, err := dialog.Directory().Title("请选择 bilibili 缓存目录").Browse()
+	if file == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
 
-	defer win.CoTaskMemFree(pid)
-
-	path := make([]uint16, win.MAX_PATH)
-	win.SHGetPathFromIDList(pid, &path[0])
-
-	c.CachePath = syscall.UTF16ToString(path)
+	c.CachePath = file
 	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
 		Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) ||
 		Exist(filepath.Join(c.CachePath, "load_log")) {
@@ -402,15 +333,6 @@ func (c *Config) SelectDirectory() {
 	}
 	c.MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")
 	c.SelectDirectory()
-}
-
-// LockMutex windows下的单实例锁
-func (c *Config) LockMutex(name string) error {
-	_, err := windows.CreateMutex(nil, true, _TEXT(name))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func printOutput(stdout io.ReadCloser) {
