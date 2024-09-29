@@ -100,8 +100,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	args := []string{
 		"-i", videoFile,
 		"-i", audioFile,
-		"-c:v", "copy", // video不指定编解码，使用bilibili原有编码
-		"-c:a", "copy", // audio不指定编解码，使用bilibili原有编码
+		"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
+		"-c:a", "copy", // audio不指定编解码，使用 BiliBili 原有编码
 		"-strict", "experimental", // 宽松编码控制器
 		c.Overlay, // 是否覆盖已存在视频
 		outputFile,
@@ -284,12 +284,12 @@ func (c *Config) GetCachePath() {
 
 	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
 	if findM4sFiles(videosDir) != nil {
-		MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
+		MessageBox("未使用 BiliBili 默认缓存路径 " + videosDir + ",\n请选择 BiliBili 当前设置的缓存路径！")
 		c.SelectDirectory()
 		return
 	}
 	c.CachePath = videosDir
-	logrus.Info("选择的 bilibili 缓存目录为: ", c.CachePath)
+	logrus.Info("选择的 BiliBili 缓存目录为: ", c.CachePath)
 	return
 
 }
@@ -357,9 +357,9 @@ func MessageBox(text string) {
 	_ = zenity.Warning(text, zenity.Title("提示"))
 }
 
-// SelectDirectory 选择BiliBili缓存目录
+// SelectDirectory 选择 BiliBili 缓存目录
 func (c *Config) SelectDirectory() {
-	file, err := zenity.SelectFile(zenity.Title("请选择 bilibili 缓存目录"), zenity.Directory())
+	file, err := zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"), zenity.Directory())
 	if file == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
@@ -369,10 +369,10 @@ func (c *Config) SelectDirectory() {
 	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
 		Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) ||
 		Exist(filepath.Join(c.CachePath, "load_log")) {
-		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
+		logrus.Info("选择的 BiliBili 缓存目录为:", c.CachePath)
 		return
 	}
-	MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")
+	MessageBox("选择的 BiliBili 缓存目录不正确，请重新选择！")
 	c.SelectDirectory()
 }
 
