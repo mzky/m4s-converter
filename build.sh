@@ -10,6 +10,7 @@ var (
     BuildTime = "$buildTime"
 )
 EOF
+# tags 支持linux、windows、macos
 echo build for Linux-amd64...
 GOOS=linux GOARCH=amd64 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux_amd64 main.go
 echo build for Linux-arm64...
