@@ -91,13 +91,13 @@ https://github.com/leiurayer/downkyi
 https://github.com/kafuumi/converter
 ```
 
-### 编码工具使用了ffmpeg
+### 视频编码工具使用了ffmpeg
 ```
 https://ffmpeg.org/
 ```
 
-###  联系我
+### 提缺陷
 
-知乎不常上，缺陷发邮件 mzky@163.com 或提交 https://github.com/mzky/m4s-converter/issues/new/choose 
+知乎不常上，缺陷发邮件到 mzky@163.com 或提交 [issues](https://github.com/mzky/m4s-converter/issues/new/choose) 
 
 最好带上异常视频的URL地址
