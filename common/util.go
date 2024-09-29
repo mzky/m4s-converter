@@ -50,7 +50,7 @@ func init() {
 	}
 
 	latestVersion := release.GetTagName()
-	logrus.Infof("Latest version is %s\n", latestVersion)
+	fmt.Println("Latest version is", latestVersion)
 
 	// 解析版本号
 	version, err := semver.NewVersion(Version)
