@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Masterminds/semver"
+	"github.com/google/go-github/v65/github"
 	"github.com/ncruces/zenity"
 	"github.com/sirupsen/logrus"
 	"io"
 	"m4s-converter/conver"
 	"m4s-converter/internal"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
-)
-
-var (
-	FileHashValue = "3b805cb66ebb0e68f19c939bece693c345b15b7bf277b572ab7b4792ee65aad8"
 )
 
 type Config struct {
@@ -28,6 +27,48 @@ type Config struct {
 	File       *os.File
 	AssPath    string
 	AssOFF     bool
+}
+
+// latest release
+var releaseURL = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
+
+func Init() {
+	resp, err := http.Get(releaseURL)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	var release *github.RepositoryRelease
+	if json.Unmarshal(body, &release) != nil {
+		return
+	}
+
+	latestVersion := release.GetTagName()
+	logrus.Infof("Latest version is %s\n", latestVersion)
+
+	// 解析版本号
+	version, err := semver.NewVersion(Version)
+	if err != nil {
+		return
+	}
+
+	lv, err := semver.NewVersion(latestVersion)
+	if err != nil {
+		return
+	}
+
+	// 版本号比较
+	if !version.Equal(lv) {
+		if version.LessThan(lv) {
+			MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
+		}
+	}
 }
 
 func (c *Config) InitConfig() {
@@ -77,7 +118,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		c.MessageBox(fmt.Sprintf("执行FFmpeg命令失败: %s", err))
+		MessageBox(fmt.Sprintf("执行FFmpeg命令失败: %s", err))
 		os.Exit(1)
 	}
 
@@ -114,7 +155,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 			}
 		}
 		if err = M4sToAV(src, dst); err != nil {
-			c.MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
+			MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
 		logrus.Info("已将m4s转换为音视频文件:", dst)
@@ -237,13 +278,13 @@ func M4sToAV(src, dst string) error {
 func (c *Config) GetCachePath() {
 	u, err := user.Current()
 	if err != nil {
-		c.MessageBox(fmt.Sprintf("无法获取当前用户：%v", err))
+		MessageBox(fmt.Sprintf("无法获取当前用户：%v", err))
 		return
 	}
 
 	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
 	if findM4sFiles(videosDir) != nil {
-		c.MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
+		MessageBox("未使用 bilibili 默认缓存路径 " + videosDir + ",\n请选择 bilibili 当前设置的缓存路径！")
 		c.SelectDirectory()
 		return
 	}
@@ -311,9 +352,9 @@ func (c *Config) PanicHandler() {
 	}
 }
 
-func (c *Config) MessageBox(text string) {
+func MessageBox(text string) {
 	logrus.Warn(text)
-	zenity.Warning(text, zenity.Title("提示"))
+	_ = zenity.Warning(text, zenity.Title("提示"))
 }
 
 // SelectDirectory 选择BiliBili缓存目录
@@ -331,7 +372,7 @@ func (c *Config) SelectDirectory() {
 		logrus.Info("选择的 bilibili 缓存目录为:", c.CachePath)
 		return
 	}
-	c.MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")
+	MessageBox("选择的 bilibili 缓存目录不正确，请重新选择！")
 	c.SelectDirectory()
 }
 

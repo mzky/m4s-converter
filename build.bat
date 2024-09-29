@@ -4,7 +4,7 @@ set "targetFile=common\version.go"
 (
     echo package common
     echo.
-    echo var Version = "1.3.7"
+    echo var Version = "1.3.8"
 ) > "%targetFile%"
 ::
 echo build for windows-x86...

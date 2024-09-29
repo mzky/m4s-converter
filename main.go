@@ -9,12 +9,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func main() {
+	common.Init()
+
 	var c common.Config
 	c.InitConfig()
 
@@ -25,13 +28,13 @@ func main() {
 	fmt.Println("查找缓存目录下可转换的文件...")
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
-		c.MessageBox(fmt.Sprintf("找不到 bilibili 目录下的 m4s 文件：%v", err))
+		common.MessageBox(fmt.Sprintf("找不到 BiliBili 目录下的 m4s 文件：%v", err))
 		wait()
 	}
 
 	dirs, err := common.GetCacheDir(c.CachePath) // 缓存根目录模式
 	if err != nil {
-		c.MessageBox(fmt.Sprintf("找不到 bilibili 的缓存目录：%v", err))
+		common.MessageBox(fmt.Sprintf("找不到 BiliBili 的缓存目录：%v", err))
 		wait()
 	}
 
@@ -86,7 +89,7 @@ func main() {
 		groupDir := filepath.Join(outputDir, groupTitle+"-"+uname)
 		if !common.Exist(groupDir) {
 			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
-				c.MessageBox("无法创建目录：" + groupDir)
+				common.MessageBox("无法创建目录：" + groupDir)
 				wait()
 			}
 		}
@@ -109,7 +112,7 @@ func main() {
 	if outputFiles != nil {
 		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
 		// 打开合成文件目录
-		go exec.Command("explorer", outputDir).Start()
+		go openFolder(outputDir)
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
@@ -117,6 +120,17 @@ func main() {
 	logrus.Print("==========================================")
 
 	wait()
+}
+
+func openFolder(outputDir string) {
+	switch runtime.GOOS {
+	case "windows":
+		_ = exec.Command("explorer", outputDir).Start()
+	case "darwin": // macOS
+		_ = exec.Command("open", outputDir).Start()
+	default: // Linux and other Unix-like systems
+		_ = exec.Command("xdg-open", outputDir).Start()
+	}
 }
 
 func wait() {
