@@ -120,7 +120,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 
 	// 启动命令
 	if err := cmd.Start(); err != nil {
-		MessageBox(fmt.Sprintf("执行FFmpeg命令失败: %s", err))
+		logrus.Error(err)
+		MessageBox("执行FFmpeg命令失败,查看程序是否有足够权限和是否安装了FFmpeg")
 		os.Exit(1)
 	}
 
@@ -356,7 +357,7 @@ func (c *Config) PanicHandler() {
 
 func MessageBox(text string) {
 	logrus.Warn(text)
-	_ = zenity.Warning(text, zenity.Title("提示"))
+	_ = zenity.Warning(text, zenity.Title("提示"), zenity.Width(400))
 }
 
 // SelectDirectory 选择 BiliBili 缓存目录
