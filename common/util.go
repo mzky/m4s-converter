@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -426,4 +427,15 @@ func GetVAId(patch string) (videoID string, audioID string) {
 	}
 
 	return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
+}
+
+func OpenFolder(outputDir string) {
+	switch runtime.GOOS {
+	case "windows":
+		_ = exec.Command("explorer", outputDir).Start()
+	case "darwin": // macOS
+		_ = exec.Command("open", outputDir).Start()
+	default: // Linux and other Unix-like systems
+		_ = exec.Command("xdg-open", outputDir).Start()
+	}
 }

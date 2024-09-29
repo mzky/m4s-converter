@@ -7,9 +7,7 @@ import (
 	"m4s-converter/common"
 	"m4s-converter/conver"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -110,7 +108,7 @@ func main() {
 	if outputFiles != nil {
 		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
 		// 打开合成文件目录
-		go openFolder(outputDir)
+		go common.OpenFolder(outputDir)
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
@@ -118,17 +116,6 @@ func main() {
 	logrus.Print("==========================================")
 
 	wait()
-}
-
-func openFolder(outputDir string) {
-	switch runtime.GOOS {
-	case "windows":
-		_ = exec.Command("explorer", outputDir).Start()
-	case "darwin": // macOS
-		_ = exec.Command("open", outputDir).Start()
-	default: // Linux and other Unix-like systems
-		_ = exec.Command("xdg-open", outputDir).Start()
-	}
 }
 
 func wait() {
