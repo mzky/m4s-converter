@@ -32,7 +32,7 @@ type Config struct {
 // latest release
 var releaseURL = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
 
-func Init() {
+func init() {
 	resp, err := http.Get(releaseURL)
 	if err != nil {
 		return
@@ -80,7 +80,9 @@ func (c *Config) InitConfig() {
 	version := flag.Bool("v", false, "查看版本号")
 	flag.Parse()
 	if *version {
-		fmt.Println("Version:", Version)
+		fmt.Println("Version:  ", Version)
+		fmt.Println("SourceVer:", SourceVer)
+		fmt.Println("BuildTime:", BuildTime)
 		os.Exit(0)
 	}
 	if c.FFMpegPath == "" {

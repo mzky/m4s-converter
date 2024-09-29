@@ -16,8 +16,6 @@ import (
 )
 
 func main() {
-	common.Init()
-
 	var c common.Config
 	c.InitConfig()
 

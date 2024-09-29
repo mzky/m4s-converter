@@ -1,4 +1,15 @@
 #!/bin/bash
+version="1.3.8"
+sourceVer=$(git log --date=iso --pretty=format:"%h @%cd" -1)
+buildTime="$(date '+%Y-%m-%d %H:%M:%S') by $(go version|sed 's/go version //')"
+cat <<EOF | gofmt >common/version.go
+package common
+var (
+    Version = "$version"
+    SourceVer = "$sourceVer"
+    BuildTime = "$buildTime"
+)
+EOF
 echo build for Linux-amd64...
 GOOS=linux GOARCH=amd64 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux_amd64 main.go
 echo build for Linux-arm64...
