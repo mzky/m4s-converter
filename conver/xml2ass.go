@@ -57,7 +57,7 @@ func Xml2ass(xml string) string {
 		_ = src.Close()
 		_ = dst.Close()
 	}
-	fmt.Println("转换弹幕:", "成功数", len(xmls)-failed, "失败数", failed)
+	//fmt.Println("转换弹幕:", "成功数", len(xmls)-failed, "失败数", failed)
 	return dstFile
 }
 

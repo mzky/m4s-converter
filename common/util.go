@@ -27,6 +27,7 @@ type Config struct {
 	File       *os.File
 	AssPath    string
 	AssOFF     bool
+	OutputDir  string
 }
 
 // latest release
@@ -111,7 +112,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		"-stats",       // 只显示统计信息
 	}
 
-	//logrus.Info(c.FFMpegPath, args)
+	logrus.Info(c.FFMpegPath, args)
 	cmd := exec.Command(c.FFMpegPath, args...)
 
 	// 设置输出和错误流 pipe
@@ -218,9 +219,13 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 		} else {
 			// 如果是目录，尝试下载并转换xml弹幕为ass格式
 			if !c.AssOFF {
+				danmakuXml := filepath.Join(path, conver.DanmakuXml)
+				if Exist(danmakuXml) {
+					c.AssPath = conver.Xml2ass(danmakuXml) // 转换xml弹幕文件为ass格式
+					return nil
+				}
 				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
 				if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
-					logrus.Warn("XML弹幕下载失败:", err) // 记录下载失败的日志
 					return nil
 				}
 				c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
@@ -265,7 +270,8 @@ func M4sToAV(src, dst string) error {
 		data := make([]byte, 9)
 		_, _ = io.ReadAtLeast(srcFile, data, 9)
 		if string(data) != "000000000" {
-			logrus.Errorf("音视频文件不是9个0的头，跳过转换")
+			logrus.Warn("音视频文件不是9个0的头，跳过转换")
+			srcFile.Seek(0, 0)
 			return
 		}
 		// 移动到第9个字节
@@ -328,8 +334,8 @@ func Exist(path string) bool {
 
 // Filter 过滤文件名
 func Filter(name string, err error) string {
-	if err != nil {
-		logrus.Error(err)
+	if err != nil || name == "" {
+		return ""
 	}
 	name = strings.ReplaceAll(name, "<", "《")
 	name = strings.ReplaceAll(name, ">", "》")
@@ -414,15 +420,30 @@ func printError(stderr io.ReadCloser, outputFile string) {
 func GetVAId(patch string) (videoID string, audioID string) {
 	pu := filepath.Join(filepath.Dir(patch), conver.PlayUrlSuffix)
 	puDate, e := os.ReadFile(pu)
-	if e != nil {
-		logrus.Error("找不到.playurl文件: ", pu)
-		return
-	}
-	var p conver.PlayUrl
-	if err := json.Unmarshal(puDate, &p); err != nil {
-		logrus.Error("解析.playurl文件失败: ", err)
-		return
-	}
+	if e == nil {
+		var p conver.PlayUrl
+		if err := json.Unmarshal(puDate, &p); err != nil {
+			logrus.Error("解析.playurl文件失败: ", err)
+			return
+		}
 
-	return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
+		return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
+	}
+	logrus.Warn("找不到.playurl文件: ", pu)
+	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
+	puDate, e = os.ReadFile(pu)
+	if e != nil {
+		logrus.Error("找不到entry.json文件: ", pu)
+		return
+	}
+	var p conver.Entry
+	if err := json.Unmarshal(puDate, &p); err != nil {
+		logrus.Error("解析entry.json文件失败: ", err)
+		return
+	}
+	if p.PageData.DownloadTitle != "视频已缓存完成" {
+		logrus.Error("跳过未缓存完成的视频", p.PageData.DownloadSubtitle)
+		return
+	}
+	return "video.m4s", "audio.m4s"
 }
