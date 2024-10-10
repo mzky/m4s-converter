@@ -32,7 +32,7 @@ type Config struct {
 }
 
 // latest release
-var releaseURL = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
+var releaseURL = "https://github.com/mzky/m4s-converter/releases/latest"
 
 func init() {
 	resp, err := http.Get(releaseURL)
@@ -68,7 +68,9 @@ func init() {
 	// 版本号比较
 	if !version.Equal(lv) {
 		if version.LessThan(lv) {
-			MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
+			//MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
+			fmt.Println("发现新版本:", latestVersion)
+			fmt.Println("按住Ctrl并点击链接打开下载地址:", releaseURL)
 		}
 	}
 }
