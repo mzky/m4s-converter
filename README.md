@@ -16,6 +16,8 @@ https://github.com/mzky/m4s-converter/releases/latest
 C:\Users\mzky\Videos\bilibili\
 其它系统或者自定义的bilibili缓存路径，请根据提示手动选择目录
 ```
+### 支持Android导出的文件合并
+参考操作步骤：https://github.com/mzky/m4s-converter/issues/9
 
 ### 个别系统需要手动安装ffmpeg（桌面版linux系统默认已安装），或指定ffmpeg路径
 
