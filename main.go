@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// 合成音视频文件
-	c.OutputDir = filepath.Join(c.CachePath, "output")
+	var outputDir string
 	var outputFiles []string
 	var skipFilePaths []string
 	for _, v := range dirs {
@@ -57,16 +57,10 @@ func main() {
 		info := filepath.Join(v, conver.VideoInfoJson)
 		if !common.Exist(info) {
 			info = filepath.Join(v, conver.VideoInfoSuffix)
-			if !common.Exist(info) {
-				info = filepath.Join(v, conver.PlayEntryJson)
-				if !common.Exist(info) {
-					continue
-				}
-			}
 		}
 		infoStr, e := os.ReadFile(info)
 		if e != nil {
-			logrus.Error("找不到包含视频信息的info相关文件: ", info)
+			logrus.Error("找不到videoInfo相关文件: ", info)
 			continue
 		}
 		js, e := simplejson.NewJson(infoStr)
@@ -76,34 +70,21 @@ func main() {
 		}
 
 		groupTitle := common.Filter(js.Get("groupTitle").String())
-		if groupTitle == "" {
-			groupTitle = common.Filter(js.Get("owner_name").String())
-		}
-		title := common.Filter(js.Get("page_data").Get("download_subtitle").String())
-		if title == "" {
-			title = common.Filter(js.Get("title").String())
-		}
+		title := common.Filter(js.Get("title").String())
 		uname := common.Filter(js.Get("uname").String())
-		if uname == "" {
-			uname = common.Filter(js.Get("title").String())
-		}
 		status := common.Filter(js.Get("status").String())
-		if status == "" {
-			status = common.Filter(js.Get("page_data").Get("download_title").String())
-		}
-		itemId, e := js.Get("itemId").Int()
-		if itemId == 0 || e != nil {
-			itemId, _ = js.Get("owner_id").Int()
-		}
-		if status != "completed" && status != "视频已缓存完成" {
+		itemId, _ := js.Get("itemId").Int()
+
+		if status != "completed" {
 			skipFilePaths = append(skipFilePaths, v)
 			logrus.Warn("未缓存完成,跳过合成", v, title+"-"+uname)
 			continue
 		}
-		if !common.Exist(c.OutputDir) {
-			_ = os.Mkdir(c.OutputDir, os.ModePerm)
+		outputDir = filepath.Join(filepath.Dir(v), "output")
+		if !common.Exist(outputDir) {
+			_ = os.Mkdir(outputDir, os.ModePerm)
 		}
-		groupDir := filepath.Join(c.OutputDir, groupTitle+"-"+uname)
+		groupDir := filepath.Join(outputDir, groupTitle+"-"+uname)
 		if !common.Exist(groupDir) {
 			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
 				common.MessageBox("无法创建目录：" + groupDir)
@@ -129,7 +110,7 @@ func main() {
 	if outputFiles != nil {
 		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
 		// 打开合成文件目录
-		go openFolder(c.OutputDir)
+		go common.OpenFolder(c.OutputDir)
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
@@ -137,17 +118,6 @@ func main() {
 	logrus.Print("==========================================")
 
 	wait()
-}
-
-func openFolder(outputDir string) {
-	switch runtime.GOOS {
-	case "windows":
-		_ = exec.Command("explorer", outputDir).Start()
-	case "darwin": // macOS
-		_ = exec.Command("open", outputDir).Start()
-	default: // Linux and other Unix-like systems
-		_ = exec.Command("xdg-open", outputDir).Start()
-	}
 }
 
 func wait() {
