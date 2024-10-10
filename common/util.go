@@ -113,7 +113,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		"-stats",       // 只显示统计信息
 	}
 
-	logrus.Info(c.FFMpegPath, args)
+	//logrus.Info(c.FFMpegPath, args)
 	cmd := exec.Command(c.FFMpegPath, args...)
 
 	// 设置输出和错误流 pipe
