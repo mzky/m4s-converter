@@ -17,7 +17,7 @@ C:\Users\mzky\Videos\bilibili\
 其它系统或者自定义的bilibili缓存路径，请根据提示手动选择目录
 ```
 
-## 非windows系统，需要手动安装ffmpeg（大部分桌面系统默认已安装），或指定ffmpeg路径
+### 个别系统需要手动安装ffmpeg（桌面版linux系统默认已安装），或指定ffmpeg路径
 
 -- UOS/Kylin/Ubuntu/Debian等桌面版系统
 ```
