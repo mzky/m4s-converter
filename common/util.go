@@ -31,11 +31,13 @@ type Config struct {
 	OutputDir  string
 }
 
-// latest release
-var releaseURL = "https://github.com/mzky/m4s-converter/releases/latest"
+var (
+	ApiURL     = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
+	releaseURL = "https://github.com/mzky/m4s-converter/releases/latest"
+)
 
-func init() {
-	resp, err := http.Get(releaseURL)
+func diffVersion() {
+	resp, err := http.Get(ApiURL)
 	if err != nil {
 		return
 	}
@@ -69,8 +71,10 @@ func init() {
 	if !version.Equal(lv) {
 		if version.LessThan(lv) {
 			//MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
-			fmt.Println("发现新版本:", latestVersion)
-			fmt.Println("按住Ctrl并点击链接打开下载地址:", releaseURL)
+			logrus.Println("发现新版本:", latestVersion)
+			logrus.Println("按住Ctrl并点击链接下载:", releaseURL)
+			fmt.Print("按回车跳过更新...")
+			_, _ = fmt.Scanln()
 		}
 	}
 }
@@ -99,6 +103,7 @@ func (c *Config) InitConfig() {
 	if *overlay {
 		c.Overlay = "-y"
 	}
+	diffVersion()
 }
 
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
