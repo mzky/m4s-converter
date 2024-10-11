@@ -31,12 +31,9 @@ type Config struct {
 	OutputDir  string
 }
 
-var (
-	ApiURL = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
-)
-
 func diffVersion() {
-	resp, err := http.Get(ApiURL)
+	apiURL := "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
+	resp, err := http.Get(apiURL)
 	if err != nil {
 		return
 	}
@@ -52,15 +49,13 @@ func diffVersion() {
 		return
 	}
 
-	latestVersion := release.GetTagName()
-	fmt.Println("Latest version is", latestVersion)
-
 	// 解析版本号
 	version, err := semver.NewVersion(Version)
 	if err != nil {
 		return
 	}
 
+	latestVersion := release.GetTagName()
 	lv, err := semver.NewVersion(latestVersion)
 	if err != nil {
 		return
@@ -68,8 +63,7 @@ func diffVersion() {
 
 	releaseURL := fmt.Sprintf(
 		"https://github.com/mzky/m4s-converter/releases/download/%s/%s",
-		latestVersion,
-		filepath.Base(os.Args[0]))
+		latestVersion, filepath.Base(os.Args[0]))
 	// 版本号比较
 	if !version.Equal(lv) {
 		if version.LessThan(lv) {
@@ -298,7 +292,6 @@ func M4sToAV(src, dst string) error {
 
 // GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
-	fmt.Println(c.CachePath)
 	if findM4sFiles(c.CachePath) != nil {
 		MessageBox("BiliBili缓存路径 " + c.CachePath + "未找到缓存文件,\n请重新选择 BiliBili 缓存文件路径！")
 		c.SelectDirectory()
