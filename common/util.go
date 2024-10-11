@@ -25,7 +25,7 @@ type Config struct {
 	FFMpegPath string
 	CachePath  string
 	Overlay    string
-	File       *os.File
+	File       os.File
 	AssPath    string
 	AssOFF     bool
 	OutputDir  string
@@ -84,13 +84,17 @@ func diffVersion() {
 
 func (c *Config) InitConfig() {
 	InitLog()
+	u, _ := user.Current()
 	overlay := flag.Bool("o", false, "是否覆盖已存在的视频，默认不覆盖") //nolint
-	c.AssOFF = *flag.Bool("a", false, "是否关闭自动生成ass弹幕，默认不关闭")
-	c.FFMpegPath = *flag.String("f", "", "自定义FFMpeg文件路径")
-	c.CachePath = *flag.String("c", "", "指定缓存路径，默认使用BiliBili默认缓存路径")
+	assOFF := flag.Bool("a", false, "是否关闭自动生成ass弹幕，默认不关闭")
+	ffMpegPath := flag.String("f", "", "自定义FFMpeg文件路径")
+	cachePath := flag.String("c", filepath.Join(u.HomeDir, "Videos", "bilibili"), "指定缓存路径，默认使用BiliBili默认缓存路径")
 	version := flag.Bool("v", false, "查看版本号")
 	flag.Parse()
 	diffVersion()
+	c.AssOFF = *assOFF
+	c.FFMpegPath = *ffMpegPath
+	c.CachePath = *cachePath
 	if *version {
 		fmt.Println("Version:  ", Version)
 		fmt.Println("SourceVer:", SourceVer)
@@ -100,9 +104,7 @@ func (c *Config) InitConfig() {
 	if c.FFMpegPath == "" {
 		c.FFMpegPath = internal.GetFFMpeg()
 	}
-	if c.CachePath == "" {
-		c.GetCachePath()
-	}
+	c.GetCachePath()
 	c.Overlay = "-n"
 	if *overlay {
 		c.Overlay = "-y"
@@ -296,22 +298,14 @@ func M4sToAV(src, dst string) error {
 
 // GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
-	u, err := user.Current()
-	if err != nil {
-		MessageBox(fmt.Sprintf("无法获取当前用户：%v", err))
-		return
-	}
-
-	videosDir := filepath.Join(u.HomeDir, "Videos", "bilibili")
-	if findM4sFiles(videosDir) != nil {
-		MessageBox("未使用 BiliBili 默认缓存路径 " + videosDir + ",\n请选择 BiliBili 当前设置的缓存路径！")
+	fmt.Println(c.CachePath)
+	if findM4sFiles(c.CachePath) != nil {
+		MessageBox("BiliBili缓存路径 " + c.CachePath + "未找到缓存文件,\n请重新选择 BiliBili 缓存文件路径！")
 		c.SelectDirectory()
 		return
 	}
-	c.CachePath = videosDir
 	logrus.Info("选择的 BiliBili 缓存目录为: ", c.CachePath)
 	return
-
 }
 
 // 查找 m4s 文件
@@ -379,13 +373,13 @@ func MessageBox(text string) {
 
 // SelectDirectory 选择 BiliBili 缓存目录
 func (c *Config) SelectDirectory() {
-	file, err := zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"), zenity.Directory())
-	if file == "" || err != nil {
+	dir, err := zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"), zenity.Directory())
+	if dir == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
 
-	c.CachePath = file
+	c.CachePath = dir
 	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
 		Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) ||
 		Exist(filepath.Join(c.CachePath, "load_log")) {
