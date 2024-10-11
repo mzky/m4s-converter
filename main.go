@@ -126,7 +126,7 @@ func main() {
 	}
 	if outputFiles != nil {
 		logrus.Printf("合成的文件:\n%s\n输出目录: %s",
-			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir+`\`, ""),
+			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir, ""),
 			c.OutputDir)
 		// 打开合成文件目录
 		go common.OpenFolder(c.OutputDir)
