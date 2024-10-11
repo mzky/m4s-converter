@@ -21,7 +21,7 @@ func main() {
 	defer c.File.Close()
 
 	begin := time.Now().Unix()
-	fmt.Println("查找缓存目录下可转换的文件...")
+	logrus.Println("查找缓存目录下可转换的文件...")
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
 		common.MessageBox(fmt.Sprintf("找不到 BiliBili 目录下的 m4s 文件：%v", err))
@@ -125,7 +125,9 @@ func main() {
 		logrus.Print("跳过的目录:\n" + strings.Join(skipFilePaths, "\n"))
 	}
 	if outputFiles != nil {
-		logrus.Print("合成的文件:\n" + strings.Join(outputFiles, "\n"))
+		logrus.Printf("合成的文件:\n%s\n输出目录: %s",
+			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir+`\`, ""),
+			c.OutputDir)
 		// 打开合成文件目录
 		go common.OpenFolder(c.OutputDir)
 	} else {

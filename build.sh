@@ -21,4 +21,4 @@ GOOS=darwin GOARCH=amd64 go build -tags "darwin" -o m4s-converter-darwin_amd64 m
 echo build for darwin-arm64...
 GOOS=darwin GOARCH=arm64 go build -tags "darwin" -o m4s-converter-darwin_arm64 main.go
 # 压缩
-upx --lzma  m4s-converter-*
+upx --lzma m4s-converter-*

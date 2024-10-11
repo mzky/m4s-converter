@@ -140,12 +140,9 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	go printError(stderr, outputFile)
 
 	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
-	if err := copyFile(c.AssPath, assFile, func(*os.File) {}); err != nil {
-		logrus.Error(err)
-	}
+	copyFile(c.AssPath, assFile, func(*os.File) {})
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
-		fmt.Println()
 		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
 	}
 	return nil
@@ -169,7 +166,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 			MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
-		logrus.Info("已将m4s转换为音视频文件:", dst)
+		logrus.Info("已将m4s转换为音视频文件:\n", dst)
 	}
 	return nil
 }
@@ -398,7 +395,7 @@ func printOutput(stdout io.ReadCloser) {
 }
 
 func printError(stderr io.ReadCloser, outputFile string) {
-	fmt.Println("准备合成:", filepath.Base(outputFile))
+	logrus.Println("# 准备合成:", filepath.Base(outputFile))
 	buf := make([]byte, 1024)
 	for {
 		n, e := stderr.Read(buf)
@@ -428,7 +425,7 @@ func GetVAId(patch string) (videoID string, audioID string) {
 
 		return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
 	}
-	logrus.Warn("找不到.playurl文件: ", pu)
+	logrus.Warn("找不到.playurl文件:\n", pu)
 	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
 	puDate, e = os.ReadFile(pu)
 	if e != nil {
