@@ -137,7 +137,7 @@ func main() {
 	wait()
 }
 func wait() {
-	fmt.Print("按回车键退出...")
+	fmt.Print("按[回车]键退出...")
 	_, _ = fmt.Scanln()
 	os.Exit(0)
 }

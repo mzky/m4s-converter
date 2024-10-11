@@ -2,8 +2,9 @@
 <module type="WEB_MODULE" version="4">
   <component name="Go" enabled="true">
     <buildTags>
-      <option name="arch" value="386" />
+      <option name="arch" value="amd64" />
       <option name="cgo" value="NO" />
+      <option name="compiler" value="gccgo" />
     </buildTags>
   </component>
   <component name="NewModuleRootManager">

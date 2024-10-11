@@ -32,8 +32,7 @@ type Config struct {
 }
 
 var (
-	ApiURL     = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
-	releaseURL = "https://github.com/mzky/m4s-converter/releases/latest"
+	ApiURL = "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
 )
 
 func diffVersion() {
@@ -67,13 +66,17 @@ func diffVersion() {
 		return
 	}
 
+	releaseURL := fmt.Sprintf(
+		"https://github.com/mzky/m4s-converter/releases/download/%s/%s",
+		latestVersion,
+		filepath.Base(os.Args[0]))
 	// 版本号比较
 	if !version.Equal(lv) {
 		if version.LessThan(lv) {
 			//MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
 			logrus.Println("发现新版本:", latestVersion)
 			logrus.Println("按住Ctrl并点击链接下载:", releaseURL)
-			fmt.Print("按回车跳过更新...")
+			fmt.Print("按[回车]跳过更新...")
 			_, _ = fmt.Scanln()
 		}
 	}
@@ -87,6 +90,7 @@ func (c *Config) InitConfig() {
 	c.CachePath = *flag.String("c", "", "指定缓存路径，默认使用BiliBili默认缓存路径")
 	version := flag.Bool("v", false, "查看版本号")
 	flag.Parse()
+	diffVersion()
 	if *version {
 		fmt.Println("Version:  ", Version)
 		fmt.Println("SourceVer:", SourceVer)
@@ -103,7 +107,6 @@ func (c *Config) InitConfig() {
 	if *overlay {
 		c.Overlay = "-y"
 	}
-	diffVersion()
 }
 
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
