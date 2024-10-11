@@ -109,7 +109,7 @@ func main() {
 			}
 		}
 		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
-		if common.Exist(outputFile) {
+		if common.Exist(outputFile) && c.Overlay == "-n" {
 			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
 		}
 		if er := c.Composition(video, audio, outputFile); er != nil {
