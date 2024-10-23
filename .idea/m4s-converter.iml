@@ -4,7 +4,7 @@
     <buildTags>
       <option name="arch" value="amd64" />
       <option name="cgo" value="NO" />
-      <option name="compiler" value="gccgo" />
+      <option name="goVersion" value="1.20" />
     </buildTags>
   </component>
   <component name="NewModuleRootManager">
