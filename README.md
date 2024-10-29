@@ -82,7 +82,7 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 
 以上为固态硬盘测试结果
 
-### 非缓存下载方式，推荐使用其它工具
+### 非缓存方式下载，推荐使用其它工具
 ```
 https://github.com/nICEnnnnnnnLee/BilibiliDown
 https://github.com/leiurayer/downkyi
@@ -100,6 +100,6 @@ https://ffmpeg.org/
 
 ### 提缺陷
 
-知乎不常上，缺陷或建议发邮件到 mzky@163.com 或提交 [issues](https://github.com/mzky/m4s-converter/issues/new/choose) 
+知乎不常上，缺陷或建议提交 [issues](https://github.com/mzky/m4s-converter/issues/new/choose) 
 
 最好带上异常视频的URL地址
