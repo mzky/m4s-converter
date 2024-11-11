@@ -36,15 +36,22 @@ brew install ffmpeg
 
 ```
 # 指定FFMpeg路径，例如: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
-# 其它可用参数：
-Usage of ./m4s-converter-amd64:
-  -a    是否关闭自动生成ass弹幕，默认不关闭
-  -c string
-        指定缓存路径，默认使用BiliBili默认缓存路径
-  -f string
+# 自定义音频偏移量，例如: ./m4s-converter-amd64 -a 0.326
+Options:
+  --assOFF, -g
+        是否关闭自动生成ass弹幕，默认不关闭
+  --cachePath, -c string
+        自定义缓存路径，默认使用BiliBili的默认路径 (default C:\Users\mzky\Videos\bilibili)
+  --ffMpeg, -f string
         自定义FFMpeg文件路径
-  -o    是否覆盖已存在的视频，默认不覆盖
-  -v    查看版本号
+  --help, -h
+        帮助信息
+  --offsetAudio, -a string
+        自定义音频偏移量
+  --offsetVideo, -v string
+        自定义视频偏移量
+  --overlay, -o
+        是否覆盖已存在的视频，默认不覆盖
 ```
 
 验证合成：

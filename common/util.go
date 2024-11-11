@@ -2,10 +2,10 @@ package common
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/Masterminds/semver"
 	"github.com/google/go-github/v65/github"
+	"github.com/gookit/goutil/cflag"
 	"github.com/ncruces/zenity"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -29,6 +29,8 @@ type Config struct {
 	AssPath    string
 	AssOFF     bool
 	OutputDir  string
+	AOffset    string
+	VOffset    string
 }
 
 func diffVersion() {
@@ -77,47 +79,82 @@ func diffVersion() {
 }
 
 func (c *Config) InitConfig() {
-	InitLog()
 	u, _ := user.Current()
-	overlay := flag.Bool("o", false, "是否覆盖已存在的视频，默认不覆盖") //nolint
-	assOFF := flag.Bool("a", false, "是否关闭自动生成ass弹幕，默认不关闭")
-	ffMpegPath := flag.String("f", "", "自定义FFMpeg文件路径")
-	cachePath := flag.String("c", filepath.Join(u.HomeDir, "Videos", "bilibili"), "指定缓存路径，默认使用BiliBili默认缓存路径")
-	version := flag.Bool("v", false, "查看版本号")
-	flag.Parse()
-	diffVersion()
-	c.AssOFF = *assOFF
-	c.FFMpegPath = *ffMpegPath
-	c.CachePath = *cachePath
-	if *version {
-		fmt.Println("Version:  ", Version)
-		fmt.Println("SourceVer:", SourceVer)
-		fmt.Println("BuildTime:", BuildTime)
+	f := cflag.New(func(cf *cflag.CFlags) {
+		cf.Desc = "BiliBili synthesis tool."
+		cf.Version = fmt.Sprintf("%s,%s,%s", Version, SourceVer, BuildTime)
+	})
+	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;g")
+	f.StringVar(&c.FFMpegPath, "ffMpeg", "", "自定义FFMpeg文件路径;;f")
+	f.StringVar(&c.CachePath, "cachePath", filepath.Join(u.HomeDir, "Videos", "bilibili"),
+		"自定义缓存路径，默认使用BiliBili的默认路径;;c")
+	overlay := f.Bool("overlay", false, "是否覆盖已存在的视频，默认不覆盖;;o")
+	f.StringVar(&c.AOffset, "offsetAudio", "", "自定义音频偏移量;;a")
+	f.StringVar(&c.VOffset, "offsetVideo", "", "自定义视频偏移量;;v")
+	help := f.Bool("help", false, "帮助信息;;h")
+	_ = f.Parse(nil)
+	if *help {
+		f.ShowHelp()
 		os.Exit(0)
 	}
+
+	diffVersion()
 	if c.FFMpegPath == "" {
 		c.FFMpegPath = internal.GetFFMpeg()
 	}
 	c.GetCachePath()
-	c.Overlay = "-n"
 	if *overlay {
 		c.Overlay = "-y"
+	} else {
+		c.Overlay = "-n"
 	}
 }
 
+func offsetArgs(offset string) []string {
+	if offset == "" {
+		return nil
+	}
+	return []string{"-itsoffset", offset}
+}
+
+/*
+Composition
+
+	以下是 -vsync 选项的几个常见值及其含义：
+	-vsync 0 或 -vsync passthrough：
+	直接传递输入的时间戳，不做任何调整。适用于某些特殊场景，但可能导致输出视频的帧率不稳定。
+	-vsync 1 或 -vsync cfr（Constant Frame Rate）：
+	强制输出视频具有恒定的帧率。如果输入视频的帧率不恒定，ffmpeg 会通过丢弃或重复帧来达到目标帧率。这是默认值。
+	-vsync 2 或 -vsync vfr（Variable Frame Rate）：
+	输出视频的帧率与输入视频的帧率保持一致，但允许帧率变化。这意味着 ffmpeg 不会丢弃或重复帧，而是保留所有帧，并根据输入视频的实际帧率设置输出视频的时间戳。这对于保持视频内容的完整性非常有用，尤其是在处理变帧率视频时。
+	-vsync 3 或 -vsync drop：
+	仅在输出容器支持变帧率时使用。ffmpeg 会丢弃多余的帧，但不会重复帧。适用于某些特定的输出格式。
+	-vsync -1 或 -vsync auto：
+	自动选择最合适的同步方法。ffmpeg 会根据输入视频的特性和输出格式的要求自动选择适当的同步策略。
+*/
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	// 构建FFmpeg命令行参数
-	args := []string{
+	var args []string
+	args = append(args,
 		"-i", videoFile,
 		"-i", audioFile,
 		"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
+	)
+	args = append(args, offsetArgs(c.VOffset)...) // 视频偏移
+	args = append(args,
 		"-c:a", "copy", // audio不指定编解码，使用 BiliBili 原有编码
-		"-strict", "experimental", // 宽松编码控制器
+	)
+	args = append(args, offsetArgs(c.AOffset)...) // 音频偏移
+	args = append(args,
+		//"-strict", "experimental", // 宽松编码控制器
+		"-vsync", "2", // 音视频同步模式
+		"-map", "0:v", // 指定从第一个输入文件中选择视频流
+		"-map", "1:a", // 从第二个输入文件中选择音频流
 		c.Overlay, // 是否覆盖已存在视频
 		outputFile,
 		"-hide_banner", // 隐藏版本信息和版权声明
 		"-stats",       // 只显示统计信息
-	}
+	)
 
 	//logrus.Info(c.FFMpegPath, args)
 	cmd := exec.Command(c.FFMpegPath, args...)
@@ -303,6 +340,7 @@ func findM4sFiles(directory string) error {
 	var m4sFiles []string
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
