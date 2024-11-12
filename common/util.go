@@ -98,13 +98,13 @@ func (c *Config) InitConfig() {
 	}
 
 	diffVersion()
-	if c.FFMpegPath == "" {
-		c.FFMpegPath = internal.GetFFMpeg()
-	}
 	if c.GPAC {
 		c.SelectGPACPath()
+	} else {
+		if c.FFMpegPath == "" {
+			c.FFMpegPath = internal.GetFFMpeg()
+		}
 	}
-
 	c.GetCachePath()
 	if *overlay {
 		c.Overlay = "-y"

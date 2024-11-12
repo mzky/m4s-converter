@@ -33,12 +33,14 @@ yum install ffmpeg
 ```
 brew install ffmpeg
 ```
-### 手动下载ffmpeg，下载地址：https://github.com/BtbN/FFmpeg-Builds/releases
+### 完整版ffmpeg下载地址：https://github.com/BtbN/FFmpeg-Builds/releases
 ### 使用GPAC替代ffmpeg合成文件 https://gpac.io/downloads/gpac-nightly-builds/
+bilibili使用了GPAC处理的音视频，合成音视频更适合使用GPAC工具，但GPAC需要下载，所以默认使用ffmpeg，通过-g参数使用GPAC代替ffmpeg合成文件
 
 ```
 # 指定FFMpeg路径，例如: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
-# 自定义音频偏移量，例如: ./m4s-converter-amd64 -a 0.326
+# 使用GPAC替代ffmpeg，例如: ./m4s-converter-amd64 -g
+
 Options:
   --assOFF, -a
         是否关闭自动生成ass弹幕，默认不关闭
