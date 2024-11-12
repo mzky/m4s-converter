@@ -29,8 +29,8 @@ type Config struct {
 	AssPath    string
 	AssOFF     bool
 	OutputDir  string
-	AOffset    string
-	VOffset    string
+	GPAC       bool
+	GPACPath   string
 }
 
 func diffVersion() {
@@ -84,13 +84,12 @@ func (c *Config) InitConfig() {
 		cf.Desc = "BiliBili synthesis tool."
 		cf.Version = fmt.Sprintf("%s,%s,%s", Version, SourceVer, BuildTime)
 	})
-	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;g")
+	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;a")
 	f.StringVar(&c.FFMpegPath, "ffMpeg", "", "自定义FFMpeg文件路径;;f")
 	f.StringVar(&c.CachePath, "cachePath", filepath.Join(u.HomeDir, "Videos", "bilibili"),
 		"自定义缓存路径，默认使用BiliBili的默认路径;;c")
 	overlay := f.Bool("overlay", false, "是否覆盖已存在的视频，默认不覆盖;;o")
-	f.StringVar(&c.AOffset, "offsetAudio", "", "自定义音频偏移量;;a")
-	f.StringVar(&c.VOffset, "offsetVideo", "", "自定义视频偏移量;;v")
+	f.BoolVar(&c.GPAC, "gpac", false, "使用GPAC的mp4box文件，替代FFMpeg合成文件;;g")
 	help := f.Bool("help", false, "帮助信息;;h")
 	_ = f.Parse(nil)
 	if *help {
@@ -102,6 +101,10 @@ func (c *Config) InitConfig() {
 	if c.FFMpegPath == "" {
 		c.FFMpegPath = internal.GetFFMpeg()
 	}
+	if c.GPAC {
+		c.SelectGPACPath()
+	}
+
 	c.GetCachePath()
 	if *overlay {
 		c.Overlay = "-y"
@@ -110,54 +113,31 @@ func (c *Config) InitConfig() {
 	}
 }
 
-func offsetArgs(offset string) []string {
-	if offset == "" {
-		return nil
-	}
-	return []string{"-itsoffset", offset}
-}
-
-/*
-Composition
-
-	以下是 -vsync 选项的几个常见值及其含义：
-	-vsync 0 或 -vsync passthrough：
-	直接传递输入的时间戳，不做任何调整。适用于某些特殊场景，但可能导致输出视频的帧率不稳定。
-	-vsync 1 或 -vsync cfr（Constant Frame Rate）：
-	强制输出视频具有恒定的帧率。如果输入视频的帧率不恒定，ffmpeg 会通过丢弃或重复帧来达到目标帧率。这是默认值。
-	-vsync 2 或 -vsync vfr（Variable Frame Rate）：
-	输出视频的帧率与输入视频的帧率保持一致，但允许帧率变化。这意味着 ffmpeg 不会丢弃或重复帧，而是保留所有帧，并根据输入视频的实际帧率设置输出视频的时间戳。这对于保持视频内容的完整性非常有用，尤其是在处理变帧率视频时。
-	-vsync 3 或 -vsync drop：
-	仅在输出容器支持变帧率时使用。ffmpeg 会丢弃多余的帧，但不会重复帧。适用于某些特定的输出格式。
-	-vsync -1 或 -vsync auto：
-	自动选择最合适的同步方法。ffmpeg 会根据输入视频的特性和输出格式的要求自动选择适当的同步策略。
-*/
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
-	// 构建FFmpeg命令行参数
-	var args []string
-	args = append(args,
-		"-i", videoFile,
-		"-i", audioFile,
-		"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
-	)
-	args = append(args, offsetArgs(c.VOffset)...) // 视频偏移
-	args = append(args,
-		"-c:a", "copy", // audio不指定编解码，使用 BiliBili 原有编码
-	)
-	args = append(args, offsetArgs(c.AOffset)...) // 音频偏移
-	args = append(args,
-		//"-strict", "experimental", // 宽松编码控制器
-		"-vsync", "2", // 音视频同步模式
-		"-map", "0:v", // 指定从第一个输入文件中选择视频流
-		"-map", "1:a", // 从第二个输入文件中选择音频流
-		c.Overlay, // 是否覆盖已存在视频
-		outputFile,
-		"-hide_banner", // 隐藏版本信息和版权声明
-		"-stats",       // 只显示统计信息
-	)
-
-	//logrus.Info(c.FFMpegPath, args)
-	cmd := exec.Command(c.FFMpegPath, args...)
+	var cmd *exec.Cmd
+	if c.GPACPath != "" {
+		cmd = exec.Command(c.GPACPath, "-add", videoFile, "-add", audioFile, outputFile)
+	} else {
+		// 构建FFmpeg命令行参数
+		var args []string
+		args = append(args,
+			"-i", videoFile,
+			"-i", audioFile,
+			"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
+			"-c:a", "copy", // audio不指定编解码可能会导致音视频不同步
+			//"-strict", "experimental", // 宽松编码控制器
+			"-vsync", "2", // 音视频同步模式
+			"-map", "0:v", // 指定从第一个输入文件中选择视频流
+			"-map", "1:a", // 从第二个输入文件中选择音频流
+			c.Overlay, // 是否覆盖已存在视频
+			outputFile,
+			"-hide_banner", // 隐藏版本信息和版权声明
+			"-stats",       // 只显示统计信息
+		)
+		//fmt.Println("执行FFmpeg命令:", c.FFMpegPath, strings.Join(args, " "))
+		//logrus.Info(c.FFMpegPath, args)
+		cmd = exec.Command(c.FFMpegPath, args...)
+	}
 
 	// 设置输出和错误流 pipe
 	stdout, _ := cmd.StdoutPipe()
@@ -177,7 +157,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	go printError(stderr, outputFile)
 
 	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
-	copyFile(c.AssPath, assFile, func(*os.File) {})
+	_ = c.copyFile(c.AssPath, assFile)
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
 		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
@@ -199,7 +179,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
 			}
 		}
-		if err = M4sToAV(src, dst); err != nil {
+		if err = c.M4sToAV(src, dst); err != nil {
 			MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
@@ -283,13 +263,32 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 	return video, audio, nil // 返回找到的视频和音频文件路径
 }
 
-func copyFile(src, dst string, fn func(*os.File)) error {
+func (c *Config) copyFile(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
+		logrus.Error("文件打开失败:", err)
 		return err
 	}
 	defer srcFile.Close()
-	fn(srcFile)
+
+	if _, err := srcFile.Seek(0, 0); err != nil {
+		logrus.Errorf("文件指针重置失败: %v", err)
+		return err
+	}
+	// 读取前9个字符
+	data := make([]byte, 9)
+	if _, err := io.ReadAtLeast(srcFile, data, 9); err != nil {
+		logrus.Errorf("读取文件头失败: %v", err)
+		return err
+	}
+	if string(data) == "000000000" {
+		// 移动到第9个字节
+		_, err = srcFile.Seek(9, 0) // 从文件开头偏移
+		if err != nil {
+			logrus.Errorf("文件字节偏移失败: %v", err)
+			return err
+		}
+	}
 
 	dstFile, err := os.Create(dst)
 	if err != nil {
@@ -302,26 +301,13 @@ func copyFile(src, dst string, fn func(*os.File)) error {
 	if err != nil {
 		return err
 	}
-
+	_ = srcFile.Sync()
+	_ = dstFile.Sync()
 	return nil
 }
 
-func M4sToAV(src, dst string) error {
-	return copyFile(src, dst, func(srcFile *os.File) {
-		// 读取前9个字符
-		data := make([]byte, 9)
-		_, _ = io.ReadAtLeast(srcFile, data, 9)
-		if string(data) != "000000000" {
-			logrus.Warn("音视频文件不是9个0的头，跳过转换")
-			srcFile.Seek(0, 0)
-			return
-		}
-		// 移动到第9个字节
-		_, err := srcFile.Seek(9, 0) // 从文件开头偏移
-		if err != nil {
-			logrus.Errorf("文件字节偏移失败: %v", err)
-		}
-	})
+func (c *Config) M4sToAV(src, dst string) error {
+	return c.copyFile(src, dst)
 }
 
 // GetCachePath 获取用户视频缓存路径
@@ -382,6 +368,7 @@ func Filter(name string, err error) string {
 	name = strings.ReplaceAll(name, "【", "[")
 	name = strings.ReplaceAll(name, "】", "]")
 	name = strings.ReplaceAll(name, ":", "：")
+	name = strings.ReplaceAll(name, " ", "")
 
 	return strings.TrimSpace(name)
 }
@@ -399,22 +386,77 @@ func MessageBox(text string) {
 	_ = zenity.Warning(text, zenity.Title("提示"), zenity.Width(400))
 }
 
+// checkFilesExist 检查多个文件是否存在
+func checkFilesExist(paths ...string) bool {
+	for _, path := range paths {
+		if Exist(path) {
+			return true
+		}
+	}
+	return false
+}
+
+// checkM4SFiles 检查目录及其子目录下是否存在 m4s 文件
+func (c *Config) checkM4SFiles() bool {
+	// 检查路径是否为空或无效
+	if c.CachePath == "" {
+		return false
+	}
+
+	// 递归遍历目录
+	err := filepath.Walk(c.CachePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// 检查文件扩展名是否为 .m4s
+		if !info.IsDir() && strings.HasSuffix(info.Name(), conver.M4sSuffix) {
+			logrus.Infof("找到 m4s 文件: %s", path)
+			return filepath.SkipDir // 提前返回，停止遍历当前目录及其子目录
+		}
+		return nil
+	})
+
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 // SelectDirectory 选择 BiliBili 缓存目录
 func (c *Config) SelectDirectory() {
-	dir, err := zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"), zenity.Directory())
-	if dir == "" || err != nil {
+	var err error
+	c.CachePath, err = zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"))
+	if c.CachePath == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
+	videoInfoPath := filepath.Join(c.CachePath, conver.VideoInfoSuffix)
+	videoInfoJsonPath := filepath.Join(c.CachePath, conver.VideoInfoJson)
+	loadLogPath := filepath.Join(c.CachePath, "load_log")
 
-	c.CachePath = dir
-	if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
-		Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) ||
-		Exist(filepath.Join(c.CachePath, "load_log")) {
+	if checkFilesExist(videoInfoPath, videoInfoJsonPath, loadLogPath) || c.checkM4SFiles() {
 		logrus.Info("选择的 BiliBili 缓存目录为:", c.CachePath)
 		return
 	}
 	MessageBox("选择的 BiliBili 缓存目录不正确，请重新选择！")
+	c.SelectDirectory()
+}
+
+// SelectGPACPath 选择 GPACPath文件
+func (c *Config) SelectGPACPath() {
+	var err error
+	c.GPACPath, err = zenity.SelectFile(zenity.Title("请选择 GPAC 的 mp4box 文件"))
+	if c.GPACPath == "" || err != nil {
+		logrus.Warn("关闭对话框后自动退出程序")
+		os.Exit(1)
+	}
+
+	if checkFilesExist(c.GPACPath) {
+		logrus.Info("选择 GPAC 的 mp4box 文件为:", c.CachePath)
+		return
+	}
+	MessageBox("选择 GPAC 的 mp4box 文件不存在，请重新选择！")
 	c.SelectDirectory()
 }
 
