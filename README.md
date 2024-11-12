@@ -38,8 +38,8 @@ brew install ffmpeg
 bilibili使用了GPAC处理的音视频，合成音视频更适合使用GPAC工具，但GPAC需要下载，所以默认使用ffmpeg，通过-g参数使用GPAC代替ffmpeg合成文件
 
 ```
-# 指定FFMpeg路径，例如: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
-# 使用GPAC替代ffmpeg，例如: ./m4s-converter-amd64 -g
+# 指定FFMpeg路径: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
+# 使用GPAC替代ffmpeg: ./m4s-converter-amd64 -g
 
 Options:
   --assOFF, -a
