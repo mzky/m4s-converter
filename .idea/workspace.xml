@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9002f849-efa1-490f-a564-398330cac0f5" name="更改" comment="修复自定义缓存目录">
+    <list default="true" id="9002f849-efa1-490f-a564-398330cac0f5" name="更改" comment="自定义GPAC路径">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,7 +74,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="修复自定义缓存目录" />
-    <option name="LAST_COMMIT_MESSAGE" value="修复自定义缓存目录" />
+    <MESSAGE value="自定义GPAC路径" />
+    <option name="LAST_COMMIT_MESSAGE" value="自定义GPAC路径" />
   </component>
   <component name="VgoProject">
     <environment>

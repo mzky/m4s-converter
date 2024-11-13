@@ -29,7 +29,7 @@ yum install ffmpeg
 brew install ffmpeg
 ```
 #### 完整版ffmpeg下载地址：https://github.com/BtbN/FFmpeg-Builds/releases
-#### 使用GPAC替代ffmpeg合成文件：https://gpac.io/downloads/gpac-nightly-builds/
+#### 使用GPAC替代ffmpeg合成文件：https://gpac.io/downloads/gpac-nightly-builds
 bilibili使用了开源工具GPAC处理音视频，合成音视频更适合使用GPAC工具，但GPAC需要下载，所以默认使用ffmpeg，
 如果发现合成的文件音视频不同同步，可以使用 -g 参数选择GPAC的mp4box代替ffmpeg合成文件，详见：https://github.com/mzky/m4s-converter/issues/11
 
