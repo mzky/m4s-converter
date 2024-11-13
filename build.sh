@@ -1,13 +1,13 @@
 #!/bin/bash
-version="1.3.10"
+version="1.4.0"
 sourceVer=$(git log --date=iso --pretty=format:"%h @%cd" -1)
 buildTime="$(date '+%Y-%m-%d %H:%M:%S') by $(go version|sed 's/go version //')"
 cat <<EOF | gofmt >common/version.go
 package common
 var (
-    Version = "$version"
-    SourceVer = "$sourceVer"
-    BuildTime = "$buildTime"
+    version = "$version"
+    sourceVer = "$sourceVer"
+    buildTime = "$buildTime"
 )
 EOF
 # tags 支持linux、windows、macos

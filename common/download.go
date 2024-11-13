@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func DownloadFile(url string, filepath string) error {
+func downloadFile(url string, filepath string) error {
 	// 发起HTTP GET请求
 	httpReq, err := http.Get(url)
 	if err != nil {
@@ -52,8 +52,8 @@ func DownloadFile(url string, filepath string) error {
 	_, _ = localFile.Write([]byte(contentEncoding))
 
 	// 检查文件是否成功写入
-	if err := localFile.Sync(); err != nil {
-		return err
+	if e := localFile.Sync(); e != nil {
+		return e
 	}
 
 	return nil

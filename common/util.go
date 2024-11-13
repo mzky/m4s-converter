@@ -52,7 +52,7 @@ func diffVersion() {
 	}
 
 	// 解析版本号
-	version, err := semver.NewVersion(Version)
+	version, err := semver.NewVersion(version)
 	if err != nil {
 		return
 	}
@@ -69,7 +69,7 @@ func diffVersion() {
 	// 版本号比较
 	if !version.Equal(lv) {
 		if version.LessThan(lv) {
-			//MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
+			// MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
 			logrus.Println("发现新版本:", latestVersion)
 			logrus.Println("按住Ctrl并点击链接下载:", releaseURL)
 			fmt.Print("按[回车]跳过更新...")
@@ -82,7 +82,7 @@ func (c *Config) InitConfig() {
 	u, _ := user.Current()
 	f := cflag.New(func(cf *cflag.CFlags) {
 		cf.Desc = "BiliBili synthesis tool."
-		cf.Version = fmt.Sprintf("%s,%s,%s", Version, SourceVer, BuildTime)
+		cf.Version = fmt.Sprintf("%s,%s,%s", version, sourceVer, buildTime)
 	})
 	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;a")
 	f.StringVar(&c.FFMpegPath, "ffMpeg", "", "自定义FFMpeg文件路径;;f")
@@ -90,6 +90,7 @@ func (c *Config) InitConfig() {
 		"自定义缓存路径，默认使用BiliBili的默认路径;;c")
 	overlay := f.Bool("overlay", false, "是否覆盖已存在的视频，默认不覆盖;;o")
 	f.BoolVar(&c.GPAC, "gpac", false, "使用GPAC的mp4box文件，替代FFMpeg合成文件;;g")
+	f.StringVar(&c.GPACPath, "gpacpath", "", "自定义GPAC的mp4box文件路径;;p")
 	help := f.Bool("help", false, "帮助信息;;h")
 	_ = f.Parse(nil)
 	if *help {
@@ -125,7 +126,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			"-i", audioFile,
 			"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
 			"-c:a", "copy", // audio不指定编解码可能会导致音视频不同步
-			//"-strict", "experimental", // 宽松编码控制器
+			// "-strict", "experimental", // 宽松编码控制器
 			"-vsync", "2", // 音视频同步模式
 			"-map", "0:v", // 指定从第一个输入文件中选择视频流
 			"-map", "1:a", // 从第二个输入文件中选择音频流
@@ -134,8 +135,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			"-hide_banner", // 隐藏版本信息和版权声明
 			"-stats",       // 只显示统计信息
 		)
-		//fmt.Println("执行FFmpeg命令:", c.FFMpegPath, strings.Join(args, " "))
-		//logrus.Info(c.FFMpegPath, args)
+		// fmt.Println("执行FFmpeg命令:", c.FFMpegPath, strings.Join(args, " "))
+		// logrus.Info(c.FFMpegPath, args)
 		cmd = exec.Command(c.FFMpegPath, args...)
 	}
 
@@ -210,7 +211,7 @@ func GetCacheDir(cachePath string) ([]string, error) {
 }
 
 func joinUrl(cid string) string {
-	//return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
+	// return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
 	return "https://comment.bilibili.com/" + cid + conver.XmlSuffix
 }
 
@@ -247,7 +248,7 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 					return nil
 				}
 				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
-				if e := DownloadFile(joinUrl(info.Name()), xmlPath); e != nil {
+				if e := downloadFile(joinUrl(info.Name()), xmlPath); e != nil {
 					return nil
 				}
 				c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
@@ -312,8 +313,8 @@ func (c *Config) M4sToAV(src, dst string) error {
 
 // GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
-	if findM4sFiles(c.CachePath) != nil {
-		MessageBox("BiliBili缓存路径 " + c.CachePath + "未找到缓存文件,\n请重新选择 BiliBili 缓存文件路径！")
+	if c.findM4sFiles() != nil {
+		MessageBox("BiliBili缓存路径 " + c.CachePath + " 未找到缓存文件,\n请重新选择 BiliBili 缓存文件路径！")
 		c.SelectDirectory()
 		return
 	}
@@ -322,27 +323,27 @@ func (c *Config) GetCachePath() {
 }
 
 // 查找 m4s 文件
-func findM4sFiles(directory string) error {
-	var m4sFiles []string
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
-			return err
-		}
-		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
-			m4sFiles = append(m4sFiles, path)
-			return nil
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	if len(m4sFiles) == 0 {
-		return fmt.Errorf("找不到缓存目录: %s", directory)
-	}
-	return nil
-}
+// func findM4sFiles(directory string) error {
+// 	var m4sFiles []string
+// 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+// 		if err != nil {
+// 			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
+// 			return err
+// 		}
+// 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
+// 			m4sFiles = append(m4sFiles, path)
+// 			return nil
+// 		}
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if len(m4sFiles) == 0 {
+// 		return fmt.Errorf("找不到缓存目录: %s", directory)
+// 	}
+// 	return nil
+// }
 
 func Exist(path string) bool {
 	_, err := os.Stat(path)
@@ -396,50 +397,43 @@ func checkFilesExist(paths ...string) bool {
 	return false
 }
 
-// checkM4SFiles 检查目录及其子目录下是否存在 m4s 文件
-func (c *Config) checkM4SFiles() bool {
-	// 检查路径是否为空或无效
-	if c.CachePath == "" {
-		return false
-	}
-
-	// 递归遍历目录
+// findM4sFiles 检查目录及其子目录下是否存在m4s文件
+func (c *Config) findM4sFiles() error {
+	var m4sFiles []string
 	err := filepath.Walk(c.CachePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
 			return err
 		}
-		// 检查文件扩展名是否为 .m4s
-		if !info.IsDir() && strings.HasSuffix(info.Name(), conver.M4sSuffix) {
-			logrus.Infof("找到 m4s 文件: %s", path)
-			return filepath.SkipDir // 提前返回，停止遍历当前目录及其子目录
+		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
+			m4sFiles = append(m4sFiles, path)
+			return nil
 		}
 		return nil
 	})
-
 	if err != nil {
-		return false
+		return err
 	}
-
-	return true
+	if len(m4sFiles) == 0 {
+		return fmt.Errorf("缓存目录找不到m4s文件: %s", c.CachePath)
+	}
+	return nil
 }
 
 // SelectDirectory 选择 BiliBili 缓存目录
 func (c *Config) SelectDirectory() {
 	var err error
-	c.CachePath, err = zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"))
+	c.CachePath, err = zenity.SelectFile(zenity.Title("请选择 BiliBili 缓存目录"), zenity.Directory())
 	if c.CachePath == "" || err != nil {
 		logrus.Warn("关闭对话框后自动退出程序")
 		os.Exit(1)
 	}
-	videoInfoPath := filepath.Join(c.CachePath, conver.VideoInfoSuffix)
-	videoInfoJsonPath := filepath.Join(c.CachePath, conver.VideoInfoJson)
-	loadLogPath := filepath.Join(c.CachePath, "load_log")
 
-	if checkFilesExist(videoInfoPath, videoInfoJsonPath, loadLogPath) || c.checkM4SFiles() {
+	if c.findM4sFiles() == nil {
 		logrus.Info("选择的 BiliBili 缓存目录为:", c.CachePath)
 		return
 	}
-	MessageBox("选择的 BiliBili 缓存目录不正确，请重新选择！")
+	MessageBox("选择的 BiliBili 缓存目录内找不到m4s文件，请重新选择！")
 	c.SelectDirectory()
 }
 
@@ -465,7 +459,7 @@ func printOutput(stdout io.ReadCloser) {
 	for {
 		n, e := stdout.Read(buf)
 		if e != nil {
-			//logrus.Error("读取标准输出错误:", e)
+			// logrus.Error("读取标准输出错误:", e)
 			return
 		}
 		if n > 0 {
@@ -480,7 +474,7 @@ func printError(stderr io.ReadCloser, outputFile string) {
 	for {
 		n, e := stderr.Read(buf)
 		if e != nil {
-			//logrus.Error("读取标准错误输出错误:", e)
+			// logrus.Error("读取标准错误输出错误:", e)
 			return
 		}
 		if n > 0 {
