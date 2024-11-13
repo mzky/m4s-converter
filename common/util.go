@@ -88,7 +88,7 @@ func (c *Config) InitConfig() {
 	f.StringVar(&c.CachePath, "cachePath", filepath.Join(u.HomeDir, "Videos", "bilibili"),
 		"自定义缓存路径，默认使用BiliBili的默认路径;;c")
 	overlay := f.Bool("overlay", false, "是否覆盖已存在的视频，默认不覆盖;;o")
-	f.StringVar(&c.GPACPath, "gpacpath", "", "自定义GPAC的mp4box文件路径,替代FFMpeg合成文件; 输入select则弹出对话框选择文件;;g")
+	f.StringVar(&c.GPACPath, "gpacpath", "", "自定义GPAC的mp4box文件路径,替代FFMpeg合成文件\n参数为select时则弹出对话框选择文件;;g")
 	help := f.Bool("help", false, "帮助信息;;h")
 	_ = f.Parse(nil)
 	if *help {
