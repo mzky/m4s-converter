@@ -30,8 +30,8 @@ brew install ffmpeg
 ```
 #### 完整版ffmpeg下载地址：https://github.com/BtbN/FFmpeg-Builds/releases
 #### 使用GPAC替代ffmpeg合成文件：https://gpac.io/downloads/gpac-nightly-builds
-经分析音视频文件，bilibili使用了开源工具GPAC处理音视频，合成音视频更适合使用GPAC工具，但GPAC需要下载安装，所以默认使用ffmpeg，
-个别视频文件音画不同步时，可以使用 -g 参数选择GPAC的mp4box代替ffmpeg合成文件，详见：https://github.com/mzky/m4s-converter/issues/11
+bilibili使用了开源工具GPAC，合成音视频更适合使用GPAC，但GPAC需要下载安装，所以默认使用ffmpeg，
+如遇合成的视频音画不同步时，可以使用 -g 参数选择mp4box代替ffmpeg合成文件，详见：https://github.com/mzky/m4s-converter/issues/11
 
 ```
 # 指定FFMpeg路径: ./m4s-converter-amd64 -f /var/FFMpeg/ffmpeg
