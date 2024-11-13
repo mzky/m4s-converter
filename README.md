@@ -45,7 +45,7 @@ Options:
   --ffMpeg, -f string
         自定义FFMpeg文件路径
   --gpac, -g string
-        使用GPAC的mp4box文件，替代FFMpeg合成文件; 输入select则弹出对话框选择文件
+        使用GPAC的mp4box文件，替代FFMpeg合成文件，输入select则弹出对话框选择文件
   --help, -h
         帮助信息
   --overlay, -o
