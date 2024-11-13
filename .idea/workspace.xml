@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9002f849-efa1-490f-a564-398330cac0f5" name="更改" comment="修复自定义缓存目录">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/m4s-converter.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/m4s-converter.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sh" beforeDir="false" afterPath="$PROJECT_DIR$/build.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/download.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/download.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/version.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/version.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -322,29 +322,6 @@ func (c *Config) GetCachePath() {
 	return
 }
 
-// 查找 m4s 文件
-// func findM4sFiles(directory string) error {
-// 	var m4sFiles []string
-// 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
-// 		if err != nil {
-// 			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
-// 			return err
-// 		}
-// 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
-// 			m4sFiles = append(m4sFiles, path)
-// 			return nil
-// 		}
-// 		return nil
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if len(m4sFiles) == 0 {
-// 		return fmt.Errorf("找不到缓存目录: %s", directory)
-// 	}
-// 	return nil
-// }
-
 func Exist(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
