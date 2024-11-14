@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"github.com/ncruces/zenity"
 	"github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 	"io"
 	"m4s-converter/conver"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 )
 
@@ -83,9 +83,10 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 		return err
 	}
 	// 查找.m4s文件
-	if filepath.Ext(info.Name()) == conver.M4sSuffix {
+	if strings.HasSuffix(info.Name(), conver.M4sSuffix) {
 		var dst string
-		if videoId, audioId := GetVAId(src); videoId != "" && audioId != "" {
+		videoId, audioId := GetVAId(src)
+		if videoId != "" && audioId != "" {
 			if strings.Contains(info.Name(), audioId) { // 音频文件
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.AudioSuffix)
 			} else {
@@ -378,19 +379,29 @@ func printError(stderr io.ReadCloser, outputFile string) {
 // GetVAId 返回.playurl文件中视频文件或音频文件件数组
 func GetVAId(patch string) (videoID string, audioID string) {
 	pu := filepath.Join(filepath.Dir(patch), conver.PlayUrlSuffix)
-	puDate, e := os.ReadFile(pu)
+	puByte, e := os.ReadFile(pu)
 	if e == nil {
-		var p conver.PlayUrl
-		if err := json.Unmarshal(puDate, &p); err != nil {
-			logrus.Error("解析.playurl文件失败: ", err)
-			return
+		/*
+			视频：
+			data.dash.video[0].id
+			data.dash.audio[0].id
+			番剧：
+			result.dash.video[0].id  80  需要加上30000，实际30080.m4s
+			result.dash.audio[0].id  30280
+		*/
+		puStr := string(puByte)
+		var p gjson.Result
+		if p = gjson.Get(puStr, "data"); !p.Exists() {
+			p = gjson.Get(puStr, "result")
 		}
-
-		return strconv.Itoa(p.Data.Dash.Video[0].ID), strconv.Itoa(p.Data.Dash.Audio[0].ID)
+		if p.Exists() {
+			return p.Get("dash.video|@reverse|0.id").String(), p.Get("dash.audio|@reverse|0.id").String()
+		}
+		return "", ""
 	}
 	logrus.Warn("找不到.playurl文件:\n", pu)
 	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
-	puDate, e = os.ReadFile(pu)
+	puDate, e := os.ReadFile(pu)
 	if e != nil {
 		logrus.Error("找不到entry.json文件: ", pu)
 		return
