@@ -70,7 +70,12 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	go printError(stderr, outputFile)
 
 	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
-	_ = c.copyFile(c.AssPath, assFile)
+	if !Exist(assFile) {
+		logrus.Error("下载弹幕文件失败！")
+	} else {
+		_ = c.copyFile(c.AssPath, assFile)
+	}
+
 	// 等待命令执行完成
 	if err := cmd.Wait(); err == nil {
 		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
