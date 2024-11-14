@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/abema/go-mp4 v1.2.0
 	github.com/bingoohuang/golog v0.0.0-20240909041443-283abc3a5ce0
 	github.com/bitly/go-simplejson v0.5.1
 	github.com/google/go-github/v65 v65.0.0
@@ -19,9 +20,11 @@ require (
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/uuid v1.1.2 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/josephspurrier/goversioninfo v1.4.1 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
+	github.com/sunfish-shogi/bufseekio v0.0.0-20210207115823-a4185644b365 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
@@ -30,4 +33,5 @@ require (
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.26.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

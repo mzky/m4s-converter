@@ -39,10 +39,13 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			"-c:v", "copy", // video不指定编解码，使用 BiliBili 原有编码
 			"-c:a", "copy", // audio不指定编解码可能会导致音视频不同步
 			// "-strict", "experimental", // 宽松编码控制器
-			"-vsync", "2", // 音视频同步模式
+			"-vsync", "2", // 根据音频流调整视频帧率
+			// "-async", "1", // 强制音频流与视频流同步，通过丢弃或重复音频样本以匹配视频流
+			"-shortest",   // 输出文件的长度与较短的那个流相同，防止过长的流导致不同步
 			"-map", "0:v", // 指定从第一个输入文件中选择视频流
 			"-map", "1:a", // 从第二个输入文件中选择音频流
-			c.Overlay, // 是否覆盖已存在视频
+			c.Overlay,                 // 是否覆盖已存在视频
+			"-movflags", "+faststart", // 启用faststart可以让视频在网络传输时更快地开始播放
 			outputFile,
 			"-hide_banner", // 隐藏版本信息和版权声明
 			"-stats",       // 只显示统计信息
