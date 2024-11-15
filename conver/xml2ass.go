@@ -36,7 +36,7 @@ func Xml2ass(xml string) string {
 
 	failed := 0
 	for _, file := range xmls {
-		//加载xml文件
+		// 加载xml文件
 		src, _ := os.Open(file)
 		if src == nil {
 			failed++
@@ -49,7 +49,7 @@ func Xml2ass(xml string) string {
 			failed++
 			continue
 		}
-		//如果在go程中加载xml，当文件过多时会出现过高的内存占用
+		// 如果在go程中加载xml，当文件过多时会出现过高的内存占用
 		pool := converter.LoadPool(src, chain)
 		if er := pool.Convert(dst, assConfig); er != nil {
 			failed++
@@ -57,7 +57,7 @@ func Xml2ass(xml string) string {
 		_ = src.Close()
 		_ = dst.Close()
 	}
-	//fmt.Println("转换弹幕:", "成功数", len(xmls)-failed, "失败数", failed)
+	// fmt.Println("转换弹幕:", "成功数", len(xmls)-failed, "失败数", failed)
 	return dstFile
 }
 

@@ -18,7 +18,7 @@ import (
 func (c *Config) InitConfig() {
 	u, _ := user.Current()
 	f := cflag.New(func(cf *cflag.CFlags) {
-		cf.Desc = "BiliBili synthesis tool."
+		cf.Desc = "BiliBili Synthesis Tool."
 		cf.Version = fmt.Sprintf("%s,%s,%s", version, sourceVer, buildTime)
 	})
 	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;a")
@@ -29,6 +29,7 @@ func (c *Config) InitConfig() {
 	f.StringVar(&c.GPACPath, "gpacpath", "", "自定义GPAC的mp4box文件路径,替代FFMpeg合成文件\n参数为select时则弹出对话框选择文件;;g")
 	help := f.Bool("help", false, "帮助信息;;h")
 	_ = f.Parse(nil)
+
 	if *help {
 		f.ShowHelp()
 		os.Exit(0)
@@ -87,9 +88,8 @@ func diffVersion() {
 	// 版本号比较
 	if !v.Equal(lv) {
 		if v.LessThan(lv) {
-			// MessageBox(fmt.Sprintf("发现新版本: %s\n访问 %s 下载新版本", latestVersion, releaseURL))
-			logrus.Println("发现新版本:", latestVersion)
-			logrus.Println("按住Ctrl并点击链接下载:", releaseURL)
+			logrus.Warnln("发现新版本:", latestVersion, fmt.Sprintf("(当前版本:%s)", version))
+			logrus.Println("按住Ctrl并点击链接下载新版本:", releaseURL)
 			fmt.Print("按[回车]跳过更新...")
 			_, _ = fmt.Scanln()
 		}

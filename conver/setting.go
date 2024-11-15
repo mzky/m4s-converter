@@ -36,26 +36,26 @@ type color struct {
 	Alpha float32 `json:"alpha"`
 }
 type Setting struct {
-	Fontsize     int      `json:"fontsize"`     //字体大小
-	FontName     string   `json:"fontName"`     //字体名称
-	Alpha        float32  `json:"alpha"`        //弹幕透明度
-	OutlineColor color    `json:"outlineColor"` //弹幕描边颜色
-	ShadowColor  color    `json:"shadowColor"`  //弹幕阴影颜色
-	RollTime     int      `json:"rollTime"`     //滚动弹幕显示时间
-	FixTime      int      `json:"fixTime"`      //顶部弹幕和底部弹幕显示时间
-	TimeShift    int      `json:"timeShift"`    //时间偏移,单位秒
-	Bold         bool     `json:"bold"`         //是否粗体
-	Outline      int      `json:"outline"`      //描边大小
-	Shadow       int      `json:"shadow"`       //阴影大小
-	Width        int      `json:"width"`        //视频分辨率的宽
-	Height       int      `json:"height"`       //视频分辨率的高
-	RollRange    float32  `json:"rollRange"`    //滚动弹幕显示范围
-	FixedRange   float32  `json:"fixedRange"`   //顶部弹幕和底部弹幕的显示范围
-	Spacing      int      `json:"spacing"`      //弹幕的上下间距
-	Density      int      `json:"density"`      //同屏弹幕密度,0为无限密度
-	Overlay      bool     `json:"overlay"`      //是否允许弹幕重叠
-	Keyword      []string `json:"keyword"`      //按关键字屏蔽
-	Convert      string   `json:"convert"`      //转换弹幕类型
+	Fontsize     int      `json:"fontsize"`     // 字体大小
+	FontName     string   `json:"fontName"`     // 字体名称
+	Alpha        float32  `json:"alpha"`        // 弹幕透明度
+	OutlineColor color    `json:"outlineColor"` // 弹幕描边颜色
+	ShadowColor  color    `json:"shadowColor"`  // 弹幕阴影颜色
+	RollTime     int      `json:"rollTime"`     // 滚动弹幕显示时间
+	FixTime      int      `json:"fixTime"`      // 顶部弹幕和底部弹幕显示时间
+	TimeShift    int      `json:"timeShift"`    // 时间偏移,单位秒
+	Bold         bool     `json:"bold"`         // 是否粗体
+	Outline      int      `json:"outline"`      // 描边大小
+	Shadow       int      `json:"shadow"`       // 阴影大小
+	Width        int      `json:"width"`        // 视频分辨率的宽
+	Height       int      `json:"height"`       // 视频分辨率的高
+	RollRange    float32  `json:"rollRange"`    // 滚动弹幕显示范围
+	FixedRange   float32  `json:"fixedRange"`   // 顶部弹幕和底部弹幕的显示范围
+	Spacing      int      `json:"spacing"`      // 弹幕的上下间距
+	Density      int      `json:"density"`      // 同屏弹幕密度,0为无限密度
+	Overlay      bool     `json:"overlay"`      // 是否允许弹幕重叠
+	Keyword      []string `json:"keyword"`      // 按关键字屏蔽
+	Convert      string   `json:"convert"`      // 转换弹幕类型
 }
 
 func (s Setting) GetAssConfig() converter.AssConfig {
