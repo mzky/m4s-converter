@@ -18,14 +18,19 @@ import (
 type Config struct {
 	FFMpegPath string
 	CachePath  string
-	Overlay    string
-	File       os.File
+	Overlay    bool
 	AssPath    string
 	AssOFF     bool
 	OutputDir  string
 	GPACPath   string
 }
 
+func (c *Config) overlay() string {
+	if c.Overlay {
+		return "-y"
+	}
+	return "-n"
+}
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	var cmd *exec.Cmd
 	if c.GPACPath != "" {
@@ -44,7 +49,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			"-shortest",   // 输出文件的长度与较短的那个流相同，防止过长的流导致不同步
 			"-map", "0:v", // 指定从第一个输入文件中选择视频流
 			"-map", "1:a", // 从第二个输入文件中选择音频流
-			c.Overlay,                 // 是否覆盖已存在视频
+			c.overlay(),               // 是否覆盖已存在视频
 			"-movflags", "+faststart", // 启用faststart可以让视频在网络传输时更快地开始播放
 			outputFile,
 			"-hide_banner", // 隐藏版本信息和版权声明
@@ -274,7 +279,6 @@ func Filter(name string, err error) string {
 
 func (c *Config) PanicHandler() {
 	if e := recover(); e != nil {
-		_ = c.File.Close()
 		fmt.Print("按回车键退出...")
 		_, _ = fmt.Scanln()
 	}
@@ -397,10 +401,9 @@ func GetVAId(patch string) (videoID string, audioID string) {
 			result.dash.video[0].id  80  需要加上30000，实际30080.m4s
 			result.dash.audio[0].id  30280
 		*/
-		puStr := string(puByte)
 		var p gjson.Result
-		if p = gjson.Get(puStr, "data"); !p.Exists() {
-			p = gjson.Get(puStr, "result")
+		if p = gjson.GetBytes(puByte, "data"); !p.Exists() {
+			p = gjson.GetBytes(puByte, "result")
 		}
 		if p.Exists() {
 			return p.Get("dash.video|@reverse|0.id").String(), p.Get("dash.audio|@reverse|0.id").String()

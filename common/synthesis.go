@@ -102,7 +102,7 @@ func (c *Config) Synthesis() {
 			}
 		}
 		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
-		if Exist(outputFile) && c.Overlay == "-n" {
+		if Exist(outputFile) && c.overlay() == "-n" {
 			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
 		}
 		if er := c.Composition(video, audio, outputFile); er != nil {
@@ -131,7 +131,6 @@ func (c *Config) Synthesis() {
 	c.wait()
 }
 func (c *Config) wait() {
-	_ = c.File.Close()
 	fmt.Print("按[回车]键退出...")
 	_, _ = fmt.Scanln()
 	os.Exit(0)

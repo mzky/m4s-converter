@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/semver"
+	"github.com/fatih/color"
 	"github.com/google/go-github/v65/github"
-	"github.com/gookit/goutil/cflag"
+	"github.com/integrii/flaggy"
 	"github.com/sirupsen/logrus"
 	"io"
 	"m4s-converter/internal"
@@ -15,27 +16,29 @@ import (
 	"path/filepath"
 )
 
-func (c *Config) InitConfig() {
+func (c *Config) flag() {
+	var ver bool
 	u, _ := user.Current()
-	f := cflag.New(func(cf *cflag.CFlags) {
-		cf.Desc = "BiliBili Synthesis Tool."
-		cf.Version = fmt.Sprintf("%s,%s,%s", version, sourceVer, buildTime)
-	})
-	f.BoolVar(&c.AssOFF, "assOFF", false, "是否关闭自动生成ass弹幕，默认不关闭;;a")
-	f.StringVar(&c.FFMpegPath, "ffMpeg", "", "自定义FFMpeg文件路径;;f")
-	f.StringVar(&c.CachePath, "cachePath", filepath.Join(u.HomeDir, "Videos", "bilibili"),
-		"自定义缓存路径，默认使用BiliBili的默认路径;;c")
-	overlay := f.Bool("overlay", false, "是否覆盖已存在的视频，默认不覆盖;;o")
-	f.StringVar(&c.GPACPath, "gpacpath", "", "自定义GPAC的mp4box文件路径,替代FFMpeg合成文件\n参数为select时则弹出对话框选择文件;;g")
-	help := f.Bool("help", false, "帮助信息;;h")
-	_ = f.Parse(nil)
-
-	if *help {
-		f.ShowHelp()
+	flaggy.DefaultParser.ShowVersionWithVersionFlag = false
+	flaggy.SetName(color.CyanString("m4s-converter"))
+	flaggy.SetDescription(color.CyanString("BiliBili音视频合成工具."))
+	flaggy.Bool(&ver, "v", "version", "查看版本信息")
+	flaggy.Bool(&c.AssOFF, "a", "assoff", "关闭自动生成弹幕功能，默认不关闭")
+	flaggy.Bool(&c.Overlay, "o", "overlay", "合成文件时是否覆盖已存在的视频，默认不覆盖")
+	flaggy.String(&c.CachePath, "c", "cachepath", "自定义缓存路径，默认使用BiliBili的默认路径")
+	flaggy.String(&c.GPACPath, "g", "gpacpath", "自定义GPAC的mp4box文件路径,值为select时弹出选择对话框")
+	flaggy.String(&c.FFMpegPath, "f", "ffmpegpath", "自定义FFMpeg文件路径")
+	flaggy.ShowHelpOnUnexpectedEnable() // 解析到未预期参数时显示帮助
+	flaggy.Parse()
+	if ver {
+		fmt.Println(color.CyanString("当前版本: %s", version))
+		fmt.Println(color.CyanString("编译信息: %s", buildTime))
+		fmt.Println(color.CyanString("源码版本: %s", sourceVer))
 		os.Exit(0)
 	}
-
-	diffVersion()
+	if c.CachePath == "" {
+		c.CachePath = filepath.Join(u.HomeDir, "Videos", "bilibili")
+	}
 	if c.GPACPath != "" {
 		if c.GPACPath == "select" {
 			c.SelectGPACPath()
@@ -46,11 +49,10 @@ func (c *Config) InitConfig() {
 		}
 	}
 	c.GetCachePath()
-	if *overlay {
-		c.Overlay = "-y"
-	} else {
-		c.Overlay = "-n"
-	}
+}
+func (c *Config) InitConfig() {
+	diffVersion()
+	c.flag()
 }
 
 func diffVersion() {

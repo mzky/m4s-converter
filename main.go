@@ -6,8 +6,8 @@ import (
 
 func main() {
 	var c common.Config
+	go c.PanicHandler()
 	c.InitLog()
 	c.InitConfig()
-	go c.PanicHandler()
 	c.Synthesis()
 }
