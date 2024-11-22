@@ -353,9 +353,24 @@ func (c *Config) SelectGPACPath() {
 		return
 	}
 	MessageBox("选择 GPAC 的 mp4box 文件不存在，请重新选择！")
-	c.SelectDirectory()
+	c.SelectGPACPath()
 }
 
+func (c *Config) SelectFFMpegPath() {
+	var err error
+	c.FFMpegPath, err = zenity.SelectFile(zenity.Title("请选择 FFMpeg 文件"))
+	if c.FFMpegPath == "" || err != nil {
+		logrus.Warn("关闭对话框后自动退出程序")
+		os.Exit(1)
+	}
+
+	if checkFilesExist(c.FFMpegPath) {
+		logrus.Info("选择 FFMpeg 文件为:", c.CachePath)
+		return
+	}
+	MessageBox("选择 FFMpeg 文件不存在，请重新选择！")
+	c.SelectFFMpegPath()
+}
 func printOutput(stdout io.ReadCloser) {
 	buf := make([]byte, 1024)
 	for {

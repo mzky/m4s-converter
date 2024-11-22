@@ -27,7 +27,7 @@ func (c *Config) flag() {
 	flaggy.Bool(&c.Overlay, "o", "overlay", "合成文件时是否覆盖已存在的视频，默认不覆盖")
 	flaggy.String(&c.CachePath, "c", "cachepath", "自定义缓存路径，默认使用BiliBili的默认路径")
 	flaggy.String(&c.GPACPath, "g", "gpacpath", "自定义GPAC的mp4box文件路径,值为select时弹出选择对话框")
-	flaggy.String(&c.FFMpegPath, "f", "ffmpegpath", "自定义FFMpeg文件路径")
+	flaggy.String(&c.FFMpegPath, "f", "ffmpegpath", "自定义FFMpeg文件路径,值为select时弹出选择对话框")
 	flaggy.ShowHelpOnUnexpectedEnable() // 解析到未预期参数时显示帮助
 	flaggy.Parse()
 	if ver {
@@ -39,16 +39,20 @@ func (c *Config) flag() {
 	if c.CachePath == "" {
 		c.CachePath = filepath.Join(u.HomeDir, "Videos", "bilibili")
 	}
+	c.GetCachePath()
+	if c.FFMpegPath != "" {
+		if c.FFMpegPath == "select" {
+			c.SelectFFMpegPath()
+		}
+		return
+	}
 	if c.GPACPath != "" {
 		if c.GPACPath == "select" {
 			c.SelectGPACPath()
 		}
-	} else {
-		if c.FFMpegPath == "" {
-			c.FFMpegPath = internal.GetFFMpeg()
-		}
+		return
 	}
-	c.GetCachePath()
+	c.GPACPath = internal.GetMP4Box()
 }
 func (c *Config) InitConfig() {
 	diffVersion()

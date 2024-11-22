@@ -2,6 +2,6 @@
 
 package internal
 
-func GetFFMpeg() string {
-	return GetCliPath("ffmpeg")
+func GetMP4Box() string {
+	return getCliPath("MP4Box")
 }
