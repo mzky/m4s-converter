@@ -7,16 +7,21 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 
 因bilibili使用的是GPAC处理视频，本工具从v1.5.0开始默认使用GPAC的MP4Box进行音视频合成（此版开始不支持32位系统），能够避免FFMpeg合成视频后音画不同步问题，详见：https://github.com/mzky/m4s-converter/issues/11
 
+
 ### 下载使用(windows、linux版自测正常，MacOS未测试[欢迎反馈])
 ### 下载后可直接双击执行，或命令行运行
 https://github.com/mzky/m4s-converter/releases/latest
 
-### Android导出的文件合并方法
+
+### Android导出的文件合并方法 
 详见：https://github.com/mzky/m4s-converter/issues/9
+
 
 ### 除window和linux外，其它环境的依赖工具安装
 https://github.com/mzky/m4s-converter/wiki
 
+
+### 命令行参数
 ```
 # 指定FFMpeg路径: ./m4s-converter-linux_amd64 -f /var/FFMpeg/ffmpeg 或 ./m4s-converter-amd64 -f select
 # 指定MP4Box路径: ./m4s-converter-amd64.exe -g "D:\GPAC\mp4box.exe" 或 ./m4s-converter-amd64 -g select
@@ -30,7 +35,8 @@ https://github.com/mzky/m4s-converter/wiki
     -f --ffmpegpath   自定义FFMpeg文件路径,值为select时弹出选择对话框
 ```
 
-验证合成：
+
+### 验证合成：
 ```
 2023-12-05_16:02:42 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\799281779\799281779_nb3-1-30080.m4s-video.mp4
 2023-12-05_16:02:42 [INFO ] 已将m4s转换为音视频文件:C:\Users\mzky\Videos\bilibili\799281779\799281779_nb3-1-30280.m4s-audio.mp3
@@ -61,22 +67,26 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 
 以上为固态硬盘测试结果
 
+
 #### 非缓存方式下载，推荐使用其它工具
 ```
 https://github.com/nICEnnnnnnnLee/BilibiliDown
 https://github.com/leiurayer/downkyi
 ```
 
+
 #### 弹幕xml转换为ass使用了此项目
 ```
 https://github.com/kafuumi/converter
 ```
+
 
 #### 视频编码工具
 ```
 https://gpac.io
 https://ffmpeg.org
 ```
+
 
 ### 提缺陷和建议
 
