@@ -2,6 +2,13 @@
 
 package internal
 
+import (
+	_ "embed"
+	"github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
+)
+
 //go:embed linux/MP4Box
 var mp4Box []byte
 

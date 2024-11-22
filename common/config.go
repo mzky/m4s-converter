@@ -44,15 +44,18 @@ func (c *Config) flag() {
 		if c.FFMpegPath == "select" {
 			c.SelectFFMpegPath()
 		}
+		logrus.Warnln("使用FFMpeg进行音视频合成")
 		return
 	}
 	if c.GPACPath != "" {
 		if c.GPACPath == "select" {
 			c.SelectGPACPath()
+			logrus.Warnln("使用MP4Box进行音视频合成")
 		}
 		return
 	}
 	c.GPACPath = internal.GetMP4Box()
+	logrus.Warnln("使用MP4Box进行音视频合成")
 }
 func (c *Config) InitConfig() {
 	diffVersion()
