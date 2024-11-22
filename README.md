@@ -8,7 +8,7 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 因bilibili使用的是GPAC处理视频，本工具从v1.5.0开始默认使用GPAC的MP4Box进行音视频合成（此版开始不支持32位系统），能够避免FFMpeg合成视频后音画不同步问题，详见：https://github.com/mzky/m4s-converter/issues/11
 
 
-### 下载后可直接双击执行，或命令行运行(windows、linux版自测正常，MacOS未测试[欢迎反馈])
+### 下载后双击执行或命令行执行(windows、linux版自测正常，MacOS未测试[欢迎反馈])
 https://github.com/mzky/m4s-converter/releases/latest
 
 
@@ -67,25 +67,23 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 以上为固态硬盘测试结果
 
 
-#### 非缓存方式下载，推荐使用其它工具
-```
-https://github.com/nICEnnnnnnnLee/BilibiliDown
-https://github.com/leiurayer/downkyi
-```
-
-
 #### 弹幕xml转换为ass使用了此项目
 ```
 https://github.com/kafuumi/converter
 ```
 
 
-#### 视频编码工具
+#### 视频编码使用的工具
 ```
 https://gpac.io
 https://ffmpeg.org
 ```
 
+#### 非缓存方式下载，推荐使用其它工具
+```
+https://github.com/nICEnnnnnnnLee/BilibiliDown
+https://github.com/leiurayer/downkyi
+```
 
 ### 提缺陷和建议
 
