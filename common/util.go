@@ -77,10 +77,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	// 读取并打印错误流
 	go printError(stderr, outputFile)
 
-	assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
-	if !Exist(assFile) {
-		logrus.Error("下载弹幕文件失败！")
-	} else {
+	if c.AssPath != "" {
+		assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
 		_ = c.copyFile(c.AssPath, assFile)
 	}
 
@@ -137,8 +135,10 @@ func GetCacheDir(cachePath string) ([]string, error) {
 }
 
 func joinUrl(cid string) string {
-	// return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
 	return "https://comment.bilibili.com/" + cid + conver.XmlSuffix
+}
+func joinXmlUrl(cid string) string {
+	return "https://api.bilibili.com/x/v1/dm/list.so?oid=" + cid
 }
 
 // GetAudioAndVideo 从给定的缓存路径中查找音频和视频文件，并尝试下载并转换xml弹幕为ass格式
@@ -175,7 +175,10 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 				}
 				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
 				if e := downloadFile(joinUrl(info.Name()), xmlPath); e != nil {
-					return nil
+					if downloadFile(joinXmlUrl(info.Name()), xmlPath) != nil {
+						logrus.Warn("弹幕文件下载失败", e)
+						return nil
+					}
 				}
 				c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
 			}
