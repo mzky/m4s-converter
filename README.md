@@ -1,4 +1,4 @@
-### 为什么开发此程序？
+## 为什么开发此程序？
 bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 
 ![image](https://github.com/mzky/m4s-converter/assets/13345233/ea8bc799-e47d-40ca-bde4-c47193f0e453)
@@ -9,15 +9,15 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 
 
 ### 下载后双击执行或命令行执行(windows、linux版自测正常，MacOS未测试[欢迎反馈])
-https://github.com/mzky/m4s-converter/releases/latest
+- https://github.com/mzky/m4s-converter/releases/latest
 
 
 ### Android导出的文件合并方法 
-详见：https://github.com/mzky/m4s-converter/issues/9
+- 详见：https://github.com/mzky/m4s-converter/issues/9
 
 
 ### 除window和linux外，其它环境的依赖工具安装
-https://github.com/mzky/m4s-converter/wiki
+- https://github.com/mzky/m4s-converter/wiki
 
 
 ### 命令行参数
@@ -68,22 +68,18 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 
 
 #### 弹幕xml转换为ass使用了此项目
-```
-https://github.com/kafuumi/converter
-```
+- https://github.com/kafuumi/converter
 
 
 #### 视频编码使用的工具
-```
-https://gpac.io
-https://ffmpeg.org
-```
+- https://gpac.io
+- https://ffmpeg.org
+
 
 #### 非缓存方式下载，推荐使用其它工具
-```
-https://github.com/nICEnnnnnnnLee/BilibiliDown
-https://github.com/leiurayer/downkyi
-```
+- https://github.com/nICEnnnnnnnLee/BilibiliDown
+- https://github.com/leiurayer/downkyi
+
 
 ### 提缺陷和建议
 
