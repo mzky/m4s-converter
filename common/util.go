@@ -304,7 +304,7 @@ func (c *Config) findM4sFiles() error {
 	var m4sFiles []string
 	err := filepath.Walk(c.CachePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			logrus.Error("遍历目录异常: %v, 文件路径: ", err, path)
+			logrus.Errorf("遍历目录异常: %v, 文件路径: %s", err, path)
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
