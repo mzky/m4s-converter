@@ -118,14 +118,14 @@ func (c *Config) Synthesis() {
 		logrus.Print("跳过的目录:\n" + strings.Join(skipFilePaths, "\n"))
 	}
 	if outputFiles != nil {
-		logrus.Printf("输出目录: %s 合成的文件:\n%s", c.OutputDir,
+		logrus.Printf("输出目录: %s\n合成的文件:\n%s", c.OutputDir,
 			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir, ""))
 		// 打开合成文件目录
 		go OpenFolder(c.OutputDir)
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
-	logrus.Print("已完成本次任务，耗时:", end-begin, "秒")
+	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
 	logrus.Print("==========================================")
 
 	c.wait()
