@@ -1,8 +1,6 @@
 module m4s-converter
 
-go 1.21
-
-toolchain go1.23.1
+go 1.23
 
 require (
 	github.com/Masterminds/semver v1.5.0
