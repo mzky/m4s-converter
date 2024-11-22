@@ -119,7 +119,7 @@ func (c *Config) Synthesis() {
 		logrus.Print("跳过的目录:\n" + strings.Join(skipFilePaths, "\n"))
 	}
 	if outputFiles != nil {
-		fmt.Println(color.CyanString("\n输出目录:\n%s\n合成的文件:\n%s", c.OutputDir,
+		fmt.Println(color.CyanString("输出目录:\n%s\n合成的文件:\n%s", c.OutputDir,
 			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir, "")))
 		// 打开合成文件目录
 		go OpenFolder(c.OutputDir)
