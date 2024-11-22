@@ -3,9 +3,9 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 
 ![image](https://github.com/mzky/m4s-converter/assets/13345233/ea8bc799-e47d-40ca-bde4-c47193f0e453)
 
-喜欢的视频赶紧缓存起来，使用本程序将bilibili缓存的m4s转成mp4，方便随时播放。
+- 喜欢的视频赶紧缓存起来，使用本程序将bilibili缓存的m4s转成mp4，方便随时播放。
 
-因bilibili使用的是GPAC处理视频，本工具从v1.5.0开始默认使用GPAC的MP4Box进行音视频合成（此版开始不支持32位系统），能够避免FFMpeg合成视频后音画不同步问题，详见：https://github.com/mzky/m4s-converter/issues/11
+- 因bilibili使用的是GPAC处理视频，本工具从v1.5.0开始默认使用GPAC的MP4Box进行音视频合成（此版开始不支持32位系统），能够避免FFMpeg合成视频后音画不同步问题，详见：https://github.com/mzky/m4s-converter/issues/11
 
 
 ### 下载后双击执行或命令行执行(windows、linux版自测正常，MacOS未测试[欢迎反馈])
