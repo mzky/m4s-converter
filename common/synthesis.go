@@ -104,20 +104,24 @@ func (c *Config) Synthesis() {
 		}
 		mp4Name := title + conver.Mp4Suffix
 		outputFile := filepath.Join(groupDir, mp4Name)
-		newFile := filepath.Join(groupPath, mp4Name)
 		if c.Skip || Exist(outputFile) && c.findMp4Info(outputFile, c.ItemId) {
-			logrus.Warn("跳过已合成的文件:", newFile)
+			logrus.Warn("跳过已合成的文件:", filepath.Join(groupPath, mp4Name))
 			continue
 		}
 		if Exist(outputFile) && !c.Overlay {
-			outputFile = filepath.Join(groupDir, title+c.ItemId+conver.Mp4Suffix)
+			mp4Name = title + c.ItemId + conver.Mp4Suffix
+			outputFile = filepath.Join(groupDir, mp4Name)
+		}
+		if c.findMp4Info(outputFile, c.ItemId) {
+			logrus.Warn("跳过已合成的文件:", filepath.Join(groupPath, mp4Name))
+			continue
 		}
 
 		if er := c.Composition(video, audio, outputFile); er != nil {
 			logrus.Errorf("%s 合成失败", filepath.Base(outputFile))
 			continue
 		}
-		outputFiles = append(outputFiles, filepath.Base(outputFile))
+		outputFiles = append(outputFiles, filepath.Join(groupPath, mp4Name))
 	}
 
 	end := time.Now().Unix()
