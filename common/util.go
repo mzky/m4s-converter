@@ -237,11 +237,21 @@ func (c *Config) GetCachePath() {
 }
 
 func Exist(path string) bool {
-	f, err := os.Stat(path)
-	if err != nil || f.Size() == 0 {
+	_, err := os.Stat(path)
+	if err != nil {
 		return false
 	}
 	return true
+}
+func Size(path string) int64 {
+	if Exist(path) {
+		fileInfo, err := os.Stat(path)
+		if err != nil {
+			return 0
+		}
+		return fileInfo.Size()
+	}
+	return 0
 }
 
 // Filter 过滤文件名
@@ -367,13 +377,13 @@ func (c *Config) downloadXml() {
 
 	if len(dirName) < 6 { // andriod嵌套目录，音视频目录为80
 		danmakuXml := filepath.Join(filepath.Dir(dirPath), conver.DanmakuXml)
-		if Exist(danmakuXml) {
+		if Size(danmakuXml) != 0 {
 			c.AssPath = conver.Xml2Ass(danmakuXml) // 转换xml弹幕文件为ass格式
 		}
 		return
 	}
 	xmlPath := filepath.Join(dirPath, dirName+conver.XmlSuffix)
-	if Exist(xmlPath) {
+	if Size(xmlPath) != 0 {
 		c.AssPath = conver.Xml2Ass(xmlPath) // 转换xml弹幕文件为ass格式
 		return
 	}
