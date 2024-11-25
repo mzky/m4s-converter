@@ -19,6 +19,7 @@ type Config struct {
 	FFMpegPath string
 	CachePath  string
 	Overlay    bool
+	Skip       bool
 	AssPath    string
 	AssOFF     bool
 	OutputDir  string
@@ -176,7 +177,7 @@ func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
 				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
 				if e := downloadFile(joinUrl(info.Name()), xmlPath); e != nil {
 					if downloadFile(joinXmlUrl(info.Name()), xmlPath) != nil {
-						logrus.Warn("弹幕文件下载失败", e)
+						logrus.Warn("弹幕文件下载失败:", joinUrl(info.Name()))
 						return nil
 					}
 				}

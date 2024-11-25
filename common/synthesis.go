@@ -95,22 +95,29 @@ func (c *Config) Synthesis() {
 		if !Exist(c.OutputDir) {
 			_ = os.Mkdir(c.OutputDir, os.ModePerm)
 		}
-		groupDir := filepath.Join(c.OutputDir, groupTitle+"-"+uname)
+		groupPath := groupTitle + "-" + uname
+		groupDir := filepath.Join(c.OutputDir, groupPath)
 		if !Exist(groupDir) {
 			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
 				MessageBox("无法创建目录：" + groupDir)
 				c.wait()
 			}
 		}
-		outputFile := filepath.Join(groupDir, title+conver.Mp4Suffix)
-		if Exist(outputFile) && c.overlay() == "-n" {
+		mp4Name := title + conver.Mp4Suffix
+		outputFile := filepath.Join(groupDir, mp4Name)
+		newFile := filepath.Join(groupPath, mp4Name)
+		if Exist(outputFile) && c.Skip {
+			logrus.Warn("跳过已合成的文件:", newFile)
+			continue
+		}
+		if Exist(outputFile) && !c.Overlay {
 			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
 		}
 		if er := c.Composition(video, audio, outputFile); er != nil {
 			logrus.Error("合成失败:", er)
 			continue
 		}
-		outputFiles = append(outputFiles, outputFile)
+		outputFiles = append(outputFiles, newFile)
 	}
 
 	end := time.Now().Unix()
@@ -119,16 +126,15 @@ func (c *Config) Synthesis() {
 		logrus.Print("跳过的目录:\n" + strings.Join(skipFilePaths, "\n"))
 	}
 	if outputFiles != nil {
-		fmt.Println(color.CyanString("\n输出目录:\n%s\n合成的文件:\n%s", c.OutputDir,
-			strings.ReplaceAll(strings.Join(outputFiles, "\n"), c.OutputDir, "")))
+		logrus.Printf("# 输出目录:\n%s", color.CyanString(c.OutputDir))
+		logrus.Printf("# 合成的文件:\n%s", color.CyanString(strings.Join(outputFiles, "\n")))
 		// 打开合成文件目录
 		go OpenFolder(c.OutputDir)
 	} else {
 		logrus.Warn("未合成任何文件！")
 	}
-	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
 	logrus.Print("==========================================")
-
+	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
 	c.wait()
 }
 func (c *Config) wait() {
