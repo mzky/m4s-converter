@@ -24,7 +24,7 @@ func (c *Config) flag() {
 	flaggy.SetDescription(color.CyanString("BiliBili音视频合成工具."))
 	flaggy.Bool(&ver, "v", "version", "查看版本信息")
 	flaggy.Bool(&c.AssOFF, "a", "assoff", "关闭自动生成弹幕功能，默认不关闭")
-	flaggy.Bool(&c.Skip, "s", "skip", "跳过合成相同同名视频（比overlay优先级高），默认不跳过")
+	flaggy.Bool(&c.Skip, "s", "skip", "跳过合成已存在的同名视频（比overlay优先级高），默认不跳过")
 	flaggy.Bool(&c.Overlay, "o", "overlay", "合成文件时是否覆盖同名视频，默认不覆盖并重命名新文件")
 	flaggy.String(&c.CachePath, "c", "cachepath", "自定义视频缓存路径，默认使用bilibili的默认缓存路径")
 	flaggy.String(&c.GPACPath, "g", "gpacpath", "自定义GPAC的mp4box文件路径,值为select时弹出选择对话框")
