@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"m4s-converter/conver"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -83,6 +84,8 @@ func (c *Config) Synthesis() {
 		if itemId == 0 || e != nil {
 			itemId, _ = js.Get("owner_id").Int()
 		}
+		c.ItemId = strconv.Itoa(itemId)
+
 		if status != "completed" && status != "视频已缓存完成" {
 			skipFilePaths = append(skipFilePaths, v)
 			logrus.Warn("未缓存完成,跳过合成", v, title+"-"+uname)
@@ -102,12 +105,12 @@ func (c *Config) Synthesis() {
 		mp4Name := title + conver.Mp4Suffix
 		outputFile := filepath.Join(groupDir, mp4Name)
 		newFile := filepath.Join(groupPath, mp4Name)
-		if Exist(outputFile) && c.Skip {
+		if c.Skip || Exist(outputFile) && c.findMp4Info(outputFile, c.ItemId) {
 			logrus.Warn("跳过已合成的文件:", newFile)
 			continue
 		}
 		if Exist(outputFile) && !c.Overlay {
-			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
+			outputFile = filepath.Join(groupDir, title+c.ItemId+conver.Mp4Suffix)
 		}
 
 		if er := c.Composition(video, audio, outputFile); er != nil {
@@ -133,6 +136,17 @@ func (c *Config) Synthesis() {
 	logrus.Print("==========================================")
 	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
 	c.wait()
+}
+
+func (c *Config) findMp4Info(fp, sub string) bool {
+	if !Exist(c.GPACPath) {
+		return false
+	}
+	ret, err := exec.Command(c.GPACPath, "-info", fp).CombinedOutput()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(ret), sub)
 }
 
 func null2Str(s string, value string) string {

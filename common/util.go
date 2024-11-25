@@ -28,6 +28,7 @@ type Config struct {
 	GPACPath   string
 	video      string
 	audio      string
+	ItemId     string
 }
 
 func (c *Config) overlay() string {
@@ -41,6 +42,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	if c.GPACPath != "" {
 		cmd = exec.Command(c.GPACPath,
 			//"-quiet", // 仅打印异常日志
+			"-cprt", c.ItemId,
 			"-add", videoFile,
 			"-add", audioFile,
 			"-new", outputFile)
