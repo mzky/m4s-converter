@@ -60,13 +60,12 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 按回车键退出...
 ```
 
-合成 1.46GB 文件，耗时: 5 秒
-
-合成 11.7GB 文件，耗时:38 秒
+- 合成 1.46GB 文件，耗时: 5 秒
+- 合成 11.7GB 文件，耗时:38 秒
 
 以上为固态硬盘测试结果
 
-
+##
 #### 弹幕xml转换为ass使用了此项目
 - https://github.com/kafuumi/converter
 
@@ -81,7 +80,7 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 - https://github.com/leiurayer/downkyi
 
 
-### 提缺陷和建议
+## 提缺陷和建议
 
 知乎不常上，缺陷或建议提交 [issues](https://github.com/mzky/m4s-converter/issues/new/choose) 
 
