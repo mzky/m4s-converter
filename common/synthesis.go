@@ -117,7 +117,7 @@ func (c *Config) Synthesis() {
 			logrus.Errorf("%s 合成失败", filepath.Base(outputFile))
 			continue
 		}
-		outputFiles = append(outputFiles, newFile)
+		outputFiles = append(outputFiles, filepath.Base(outputFile))
 	}
 
 	end := time.Now().Unix()
