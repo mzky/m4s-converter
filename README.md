@@ -24,12 +24,13 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 ```
 # 指定FFMpeg路径: ./m4s-converter-linux_amd64 -f /var/FFMpeg/ffmpeg 或 ./m4s-converter-amd64 -f select
 # 指定MP4Box路径: ./m4s-converter-amd64.exe -g "D:\GPAC\mp4box.exe" 或 ./m4s-converter-amd64 -g select
-  Flags: 
-    -h --help         Displays help with available flag, subcommand, and positional value parameters.
+ Flags: 
+    -h --help         查看帮助信息
     -v --version      查看版本信息
     -a --assoff       关闭自动生成弹幕功能，默认不关闭
-    -o --overlay      合成文件时是否覆盖已存在的视频，默认不覆盖
-    -c --cachepath    自定义缓存路径，默认使用BiliBili的默认路径
+    -s --skip         跳过合成已存在的同名视频（比overlay优先级高），默认不跳过
+    -o --overlay      合成文件时是否覆盖同名视频，默认不覆盖并重命名新文件
+    -c --cachepath    自定义视频缓存路径，默认使用bilibili的默认缓存路径
     -g --gpacpath     自定义GPAC的mp4box文件路径,值为select时弹出选择对话框
     -f --ffmpegpath   自定义FFMpeg文件路径,值为select时弹出选择对话框
 ```
