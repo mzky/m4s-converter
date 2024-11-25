@@ -68,21 +68,17 @@ func (c *Config) Synthesis() {
 		}
 
 		groupTitle := Filter(js.Get("groupTitle").String())
-		if groupTitle == "" {
-			groupTitle = Filter(js.Get("owner_name").String())
-		}
+		groupTitle = null2Str(groupTitle, Filter(js.Get("owner_name").String()))
+
 		title := Filter(js.Get("page_data").Get("download_subtitle").String())
-		if title == "" {
-			title = Filter(js.Get("title").String())
-		}
+		title = null2Str(title, Filter(js.Get("title").String()))
+
 		uname := Filter(js.Get("uname").String())
-		if uname == "" {
-			uname = Filter(js.Get("title").String())
-		}
+		uname = null2Str(uname, Filter(js.Get("title").String()))
+
 		status := Filter(js.Get("status").String())
-		if status == "" {
-			status = Filter(js.Get("page_data").Get("download_title").String())
-		}
+		status = null2Str(status, Filter(js.Get("page_data").Get("download_title").String()))
+
 		itemId, e := js.Get("itemId").Int()
 		if itemId == 0 || e != nil {
 			itemId, _ = js.Get("owner_id").Int()
@@ -93,12 +89,12 @@ func (c *Config) Synthesis() {
 			continue
 		}
 		if !Exist(c.OutputDir) {
-			_ = os.Mkdir(c.OutputDir, os.ModePerm)
+			_ = os.MkdirAll(c.OutputDir, os.ModePerm)
 		}
 		groupPath := groupTitle + "-" + uname
 		groupDir := filepath.Join(c.OutputDir, groupPath)
 		if !Exist(groupDir) {
-			if err = os.Mkdir(groupDir, os.ModePerm); err != nil {
+			if err = os.MkdirAll(groupDir, os.ModePerm); err != nil {
 				MessageBox("无法创建目录：" + groupDir)
 				c.wait()
 			}
@@ -113,8 +109,9 @@ func (c *Config) Synthesis() {
 		if Exist(outputFile) && !c.Overlay {
 			outputFile = filepath.Join(groupDir, title+strconv.Itoa(itemId)+conver.Mp4Suffix)
 		}
+
 		if er := c.Composition(video, audio, outputFile); er != nil {
-			logrus.Error("合成失败:", er)
+			logrus.Errorf("%s 合成失败", filepath.Base(outputFile))
 			continue
 		}
 		outputFiles = append(outputFiles, newFile)
@@ -137,6 +134,14 @@ func (c *Config) Synthesis() {
 	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
 	c.wait()
 }
+
+func null2Str(s string, value string) string {
+	if s != "" {
+		return s
+	}
+	return value
+}
+
 func (c *Config) wait() {
 	fmt.Print("按[回车]键退出...")
 	_, _ = fmt.Scanln()

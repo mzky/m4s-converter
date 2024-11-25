@@ -1,6 +1,8 @@
 package common
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/ncruces/zenity"
@@ -37,7 +39,11 @@ func (c *Config) overlay() string {
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	var cmd *exec.Cmd
 	if c.GPACPath != "" {
-		cmd = exec.Command(c.GPACPath, "-add", videoFile, "-add", audioFile, outputFile)
+		cmd = exec.Command(c.GPACPath,
+			//"-quiet", // 仅打印异常日志
+			"-add", videoFile,
+			"-add", audioFile,
+			"-new", outputFile)
 	} else {
 		// 构建FFmpeg命令行参数
 		var args []string
@@ -58,27 +64,11 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 			"-hide_banner", // 隐藏版本信息和版权声明
 			"-stats",       // 只显示统计信息
 		)
-		// fmt.Println("执行FFmpeg命令:", c.FFMpegPath, strings.Join(args, " "))
-		// logrus.Info(c.FFMpegPath, args)
 		cmd = exec.Command(c.FFMpegPath, args...)
 	}
-
-	// 设置输出和错误流 pipe
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
-	// 启动命令
-	if err := cmd.Start(); err != nil {
-		logrus.Error(err)
-		MessageBox("执行FFmpeg命令失败,查看程序是否有足够权限和是否安装了FFmpeg")
-		os.Exit(1)
-	}
-
-	// 读取并打印输出流
-	go printOutput(stdout)
-
-	// 读取并打印错误流
-	go printError(stderr, outputFile)
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stdout
 
 	if c.AssPath != "" {
 		assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
@@ -86,9 +76,12 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	}
 
 	// 等待命令执行完成
-	if err := cmd.Wait(); err == nil {
-		logrus.Info("已合成视频文件:", filepath.Base(outputFile))
+	if err := cmd.Run(); err != nil {
+		logrus.Errorf("合成视频文件失败:%s\n%s", filepath.Base(outputFile), stdout.String())
+		return nil
 	}
+
+	logrus.Info("已合成视频文件:", filepath.Base(outputFile))
 	return nil
 }
 
@@ -179,45 +172,40 @@ func (c *Config) findAV(path string, info os.FileInfo, err error) error {
 	return nil
 }
 func (c *Config) copyFile(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		logrus.Error("文件打开失败:", err)
-		return err
+	// 打开源文件
+	srcFile, e := os.Open(src)
+	if e != nil {
+		logrus.Errorf("打开源文件失败: %v", e)
+		return e
 	}
 	defer srcFile.Close()
 
-	if _, err := srcFile.Seek(0, 0); err != nil {
-		logrus.Errorf("文件指针重置失败: %v", err)
-		return err
-	}
-	// 读取前9个字符
-	data := make([]byte, 9)
-	if _, err := io.ReadAtLeast(srcFile, data, 9); err != nil {
-		logrus.Errorf("读取文件头失败: %v", err)
-		return err
-	}
-	if string(data) == "000000000" {
-		// 移动到第9个字节
-		_, err = srcFile.Seek(9, 0) // 从文件开头偏移
-		if err != nil {
-			logrus.Errorf("文件字节偏移失败: %v", err)
-			return err
-		}
-	}
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
+	// 创建目标文件
+	dstFile, e := os.Create(dst)
+	if e != nil {
+		logrus.Errorf("创建目标文件失败: %v", e)
+		return e
 	}
 	defer dstFile.Close()
 
-	// 复制文件内容
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
+	// 读取前 9 个字节
+	data := make([]byte, 9)
+	if _, err := io.ReadAtLeast(srcFile, data, 9); err != nil {
+		logrus.Errorf("读取文件头失败: %v", err)
+		return e
+	}
+
+	// 检查前 9 个字节是否为 '0'
+	if string(data) != "000000000" {
+		// 如果前 9 个字节不为 '0'，写入这些字节
+		_, _ = dstFile.Write(data)
+	}
+
+	// 使用缓冲读取器逐块读取并写入文件
+	if _, err := io.Copy(bufio.NewWriter(dstFile), bufio.NewReader(srcFile)); err != nil {
+		logrus.Errorf("读取或写入文件失败: %v", err)
 		return err
 	}
-	_ = srcFile.Sync()
-	_ = dstFile.Sync()
 	return nil
 }
 
@@ -259,6 +247,8 @@ func Filter(name string, err error) string {
 	if err != nil || name == "" {
 		return ""
 	}
+	name = strings.ReplaceAll(name, "（", "(")
+	name = strings.ReplaceAll(name, "）", ")")
 	name = strings.ReplaceAll(name, "<", "《")
 	name = strings.ReplaceAll(name, ">", "》")
 	name = strings.ReplaceAll(name, `\`, "#")
@@ -395,37 +385,6 @@ func (c *Config) downloadXml() {
 	}
 	c.AssPath = conver.Xml2Ass(xmlPath) // 转换xml弹幕文件为ass格式
 }
-func printOutput(stdout io.ReadCloser) {
-	buf := make([]byte, 1024)
-	for {
-		n, e := stdout.Read(buf)
-		if e != nil {
-			// logrus.Error("读取标准输出错误:", e)
-			return
-		}
-		if n > 0 {
-			fmt.Print(string(buf[:n]))
-		}
-	}
-}
-
-func printError(stderr io.ReadCloser, outputFile string) {
-	logrus.Println("# 准备合成:", filepath.Base(outputFile))
-	buf := make([]byte, 1024)
-	for {
-		n, e := stderr.Read(buf)
-		if e != nil {
-			// logrus.Error("读取标准错误输出错误:", e)
-			return
-		}
-		if n > 0 {
-			cmdErr := string(buf[:n])
-			if strings.Contains(cmdErr, "exists") {
-				logrus.Warn("跳过已经存在的音视频文件:", filepath.Base(outputFile))
-			}
-		}
-	}
-}
 
 // GetVAId 返回.playurl文件中视频文件或音频文件件数组
 func GetVAId(patch string) (videoID string, audioID string) {
@@ -449,7 +408,9 @@ func GetVAId(patch string) (videoID string, audioID string) {
 		}
 		return "", ""
 	}
-	logrus.Warn("找不到.playurl文件:\n", pu)
+	if filepath.Base(filepath.Dir(patch)) != "80" {
+		logrus.Warn("找不到.playurl文件:\n", pu)
+	}
 	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
 	puDate, e := os.ReadFile(pu)
 	if e != nil {
