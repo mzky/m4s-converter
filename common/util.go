@@ -24,6 +24,8 @@ type Config struct {
 	AssOFF     bool
 	OutputDir  string
 	GPACPath   string
+	video      string
+	audio      string
 }
 
 func (c *Config) overlay() string {
@@ -150,50 +152,32 @@ func joinXmlUrl(cid string) string {
 // - audio: 查找到的音频文件路径
 // - error: 在搜索、下载或转换过程中遇到的任何错误
 func (c *Config) GetAudioAndVideo(cachePath string) (string, string, error) {
-	var video string
-	var audio string
-
 	// 遍历给定路径下的所有文件和目录
-	err := filepath.Walk(cachePath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err // 如果遇到错误，立即返回
-		}
-		if !info.IsDir() {
-			// 如果是文件，检查是否为视频或音频文件
-			if strings.Contains(path, conver.VideoSuffix) {
-				video = path // 找到视频文件
-			}
-			if strings.Contains(path, conver.AudioSuffix) {
-				audio = path // 找到音频文件
-			}
-		} else {
-			// 如果是目录，尝试下载并转换xml弹幕为ass格式
-			if !c.AssOFF {
-				danmakuXml := filepath.Join(path, conver.DanmakuXml)
-				if Exist(danmakuXml) {
-					c.AssPath = conver.Xml2ass(danmakuXml) // 转换xml弹幕文件为ass格式
-					return nil
-				}
-				xmlPath := filepath.Join(path, info.Name()+conver.XmlSuffix)
-				if e := downloadFile(joinUrl(info.Name()), xmlPath); e != nil {
-					if downloadFile(joinXmlUrl(info.Name()), xmlPath) != nil {
-						logrus.Warn("弹幕文件下载失败:", joinUrl(info.Name()))
-						return nil
-					}
-				}
-				c.AssPath = conver.Xml2ass(xmlPath) // 转换xml弹幕文件为ass格式
-			}
-		}
-		return nil
-	})
-
-	if err != nil {
+	if err := filepath.Walk(cachePath, c.findAV); err != nil {
 		return "", "", err // 如果遍历过程中发生错误，返回错误信息
 	}
-
-	return video, audio, nil // 返回找到的视频和音频文件路径
+	// 下载弹幕文件
+	if !c.AssOFF {
+		c.downloadXml()
+	}
+	return c.video, c.audio, nil // 返回找到的视频和音频文件路径
 }
 
+func (c *Config) findAV(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err // 如果遇到错误，立即返回
+	}
+	if !info.IsDir() {
+		// 如果是文件，检查是否为视频或音频文件
+		if strings.Contains(path, conver.VideoSuffix) {
+			c.video = path // 找到视频文件
+		}
+		if strings.Contains(path, conver.AudioSuffix) {
+			c.audio = path // 找到音频文件
+		}
+	}
+	return nil
+}
 func (c *Config) copyFile(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
@@ -253,8 +237,8 @@ func (c *Config) GetCachePath() {
 }
 
 func Exist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
+	f, err := os.Stat(path)
+	if err != nil || f.Size() == 0 {
 		return false
 	}
 	return true
@@ -374,6 +358,32 @@ func (c *Config) SelectFFMpegPath() {
 	}
 	MessageBox("选择 FFMpeg 文件不存在，请重新选择！")
 	c.SelectFFMpegPath()
+}
+
+// 如果是目录，尝试下载并转换xml弹幕为ass格式
+func (c *Config) downloadXml() {
+	dirPath := filepath.Dir(c.video)
+	dirName := filepath.Base(dirPath)
+
+	if len(dirName) < 6 { // andriod嵌套目录，音视频目录为80
+		danmakuXml := filepath.Join(filepath.Dir(dirPath), conver.DanmakuXml)
+		if Exist(danmakuXml) {
+			c.AssPath = conver.Xml2Ass(danmakuXml) // 转换xml弹幕文件为ass格式
+		}
+		return
+	}
+	xmlPath := filepath.Join(dirPath, dirName+conver.XmlSuffix)
+	if Exist(xmlPath) {
+		c.AssPath = conver.Xml2Ass(xmlPath) // 转换xml弹幕文件为ass格式
+		return
+	}
+	if e := downloadFile(joinUrl(dirName), xmlPath); e != nil {
+		if downloadFile(joinXmlUrl(dirName), xmlPath) != nil {
+			logrus.Warn("弹幕文件下载失败:", joinUrl(dirName))
+			return
+		}
+	}
+	c.AssPath = conver.Xml2Ass(xmlPath) // 转换xml弹幕文件为ass格式
 }
 func printOutput(stdout io.ReadCloser) {
 	buf := make([]byte, 1024)

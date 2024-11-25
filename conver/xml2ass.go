@@ -10,7 +10,7 @@ import (
 	"github.com/mzky/converter"
 )
 
-func Xml2ass(xml string) string {
+func Xml2Ass(xml string) string {
 	dstFile := ""
 	xmlState, err := os.Stat(xml)
 	if err != nil {
