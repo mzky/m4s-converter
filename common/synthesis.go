@@ -105,7 +105,7 @@ func (c *Config) Synthesis() {
 		mp4Name := title + conver.Mp4Suffix
 		outputFile := filepath.Join(groupDir, mp4Name)
 		if c.Skip || Exist(outputFile) && c.findMp4Info(outputFile, c.ItemId) {
-			logrus.Warn("跳过已合成的文件:", filepath.Join(groupPath, mp4Name))
+			logrus.Warn("跳过合成完全相同的文件:", filepath.Join(groupPath, mp4Name))
 			continue
 		}
 		if Exist(outputFile) && !c.Overlay {
@@ -113,7 +113,7 @@ func (c *Config) Synthesis() {
 			outputFile = filepath.Join(groupDir, mp4Name)
 		}
 		if c.findMp4Info(outputFile, c.ItemId) {
-			logrus.Warn("跳过已合成的文件:", filepath.Join(groupPath, mp4Name))
+			logrus.Warn("跳过合成完全相同的文件:", filepath.Join(groupPath, mp4Name))
 			continue
 		}
 

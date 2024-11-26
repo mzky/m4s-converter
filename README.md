@@ -28,7 +28,7 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
     -h --help         查看帮助信息
     -v --version      查看版本信息
     -a --assoff       关闭自动生成弹幕功能，默认不关闭
-    -s --skip         跳过合成已存在的同名视频（比overlay优先级高），默认不跳过
+    -s --skip         跳过合成同名视频(优先级高于overlay)，默认不跳过，但会跳过[完全相同]的文件
     -o --overlay      合成文件时是否覆盖同名视频，默认不覆盖并重命名新文件
     -c --cachepath    自定义视频缓存路径，默认使用bilibili的默认缓存路径
     -g --gpacpath     自定义GPAC的mp4box文件路径,值为select时弹出选择对话框
