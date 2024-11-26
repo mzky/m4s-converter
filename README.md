@@ -74,6 +74,7 @@ C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-�
 #### 视频编码使用的工具
 - https://gpac.io
 - https://ffmpeg.org
+- 本程序不会对下载的音视频转码，仅通过上面两个工具进行音视频轨合成
 
 
 #### 非缓存方式下载，推荐使用其它工具
