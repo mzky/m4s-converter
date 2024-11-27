@@ -44,7 +44,7 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 C:\Users\mzky\Videos\bilibili\output\【获奖学生动画】The Little Poet 小诗人｜CALARTS 2023\【获奖学生动画】The Little Poet 小诗人｜CALARTS 2023-toh糖.mp4
 C:\Users\mzky\Videos\bilibili\output\【电影历史_专题片】《影响》致敬中国电影40年【全集】\40年光影记忆-开飞机的巡查司.mp4
 C:\Users\mzky\Videos\bilibili\output\“我不是个好导演”，听田壮壮讲述“我和电影的关系”\“我不是个好导演”，听田壮壮讲述“我和电影的关系”-Tatler的朋友们.mp4
-C:\Users\mzky\Videos\bilibili\output\【4K 8K- 世界各地的美景】\中国-美景极致享受-笨蹦崩.mp4
+C:\Users\mzky\Videos\bilibili\output\【4K8K-世界各地的美景】\中国-美景极致享受-笨蹦崩.mp4
 2023-12-05_16:02:46 [INFO ] 已完成本次任务，耗时:5秒
 2023-12-05_16:02:46 [INFO ] ==========================================
 按回车键退出...
