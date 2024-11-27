@@ -73,7 +73,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	cmd.Stderr = &stdout
 
 	if c.AssPath != "" {
-		assFile := strings.ReplaceAll(outputFile, filepath.Ext(outputFile), conver.AssSuffix)
+		assFile := strings.ReplaceAll(outputFile, conver.Mp4Suffix, conver.AssSuffix)
 		_ = c.copyFile(c.AssPath, assFile)
 	}
 
