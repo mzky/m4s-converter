@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	utils "github.com/mzky/utils/common"
 	"github.com/ncruces/zenity"
 	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
@@ -106,7 +107,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 			MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
 		}
-		logrus.Info("已将m4s转换为音视频文件:\n", dst)
+		logrus.Info("已将m4s转换为音视频文件: ", strings.TrimLeft(dst, c.CachePath))
 	}
 	return nil
 }
@@ -218,7 +219,7 @@ func (c *Config) M4sToAV(src, dst string) error {
 // GetCachePath 获取用户视频缓存路径
 func (c *Config) GetCachePath() {
 	if c.findM4sFiles() != nil {
-		MessageBox("BiliBili缓存路径 " + c.CachePath + " 未找到缓存文件,\n请重新选择 BiliBili 缓存文件路径！")
+		MessageBox("BiliBili缓存路径 " + c.CachePath + " 未找到缓存文件, \n请重新选择 BiliBili 缓存文件路径！")
 		c.SelectDirectory()
 		return
 	}
@@ -226,15 +227,8 @@ func (c *Config) GetCachePath() {
 	return
 }
 
-func Exist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return true
-}
 func Size(path string) int64 {
-	if Exist(path) {
+	if utils.IsExist(path) {
 		fileInfo, err := os.Stat(path)
 		if err != nil {
 			return 0
@@ -275,18 +269,7 @@ func (c *Config) PanicHandler() {
 }
 
 func MessageBox(text string) {
-	logrus.Warn(text)
 	_ = zenity.Warning(text, zenity.Title("提示"), zenity.Width(400))
-}
-
-// checkFilesExist 检查多个文件是否存在
-func checkFilesExist(paths ...string) bool {
-	for _, path := range paths {
-		if Exist(path) {
-			return true
-		}
-	}
-	return false
 }
 
 // findM4sFiles 检查目录及其子目录下是否存在m4s文件
@@ -338,7 +321,7 @@ func (c *Config) SelectGPACPath() {
 		os.Exit(1)
 	}
 
-	if checkFilesExist(c.GPACPath) {
+	if utils.IsExist(c.GPACPath) {
 		logrus.Info("选择 GPAC 的 mp4box 文件为:", c.CachePath)
 		return
 	}
@@ -354,7 +337,7 @@ func (c *Config) SelectFFMpegPath() {
 		os.Exit(1)
 	}
 
-	if checkFilesExist(c.FFMpegPath) {
+	if utils.IsExist(c.FFMpegPath) {
 		logrus.Info("选择 FFMpeg 文件为:", c.CachePath)
 		return
 	}
@@ -367,7 +350,7 @@ func (c *Config) downloadXml() {
 	dirPath := filepath.Dir(c.video)
 	dirName := filepath.Base(dirPath)
 
-	if len(dirName) < 6 { // andriod嵌套目录，音视频目录为80
+	if len(dirName) < 6 { // Android嵌套目录，音视频目录为80
 		danmakuXml := filepath.Join(filepath.Dir(dirPath), conver.DanmakuXml)
 		if Size(danmakuXml) != 0 {
 			c.AssPath = conver.Xml2Ass(danmakuXml) // 转换xml弹幕文件为ass格式

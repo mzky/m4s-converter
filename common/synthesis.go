@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bitly/go-simplejson"
 	"github.com/fatih/color"
+	utils "github.com/mzky/utils/common"
 	"github.com/sirupsen/logrus"
 	"m4s-converter/conver"
 	"os"
@@ -31,8 +32,8 @@ func (c *Config) Synthesis() {
 
 	if dirs == nil {
 		// 判断非缓存根目录时，验证是否为子目录
-		if Exist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
-			Exist(filepath.Join(c.CachePath, conver.VideoInfoJson)) {
+		if utils.IsExist(filepath.Join(c.CachePath, conver.VideoInfoSuffix)) ||
+			utils.IsExist(filepath.Join(c.CachePath, conver.VideoInfoJson)) {
 			dirs = append(dirs, c.CachePath)
 		}
 	}
@@ -48,11 +49,11 @@ func (c *Config) Synthesis() {
 			continue
 		}
 		info := filepath.Join(v, conver.VideoInfoJson)
-		if !Exist(info) {
+		if !utils.IsExist(info) {
 			info = filepath.Join(v, conver.VideoInfoSuffix)
-			if !Exist(info) {
+			if !utils.IsExist(info) {
 				info = filepath.Join(v, conver.PlayEntryJson)
-				if !Exist(info) {
+				if !utils.IsExist(info) {
 					continue
 				}
 			}
@@ -91,12 +92,12 @@ func (c *Config) Synthesis() {
 			logrus.Warn("未缓存完成,跳过合成", v, title+"-"+uname)
 			continue
 		}
-		if !Exist(c.OutputDir) {
+		if !utils.IsExist(c.OutputDir) {
 			_ = os.MkdirAll(c.OutputDir, os.ModePerm)
 		}
 		groupPath := groupTitle + "-" + uname
 		groupDir := filepath.Join(c.OutputDir, groupPath)
-		if !Exist(groupDir) {
+		if !utils.IsExist(groupDir) {
 			if err = os.MkdirAll(groupDir, os.ModePerm); err != nil {
 				MessageBox("无法创建目录：" + groupDir)
 				c.wait()
@@ -104,16 +105,16 @@ func (c *Config) Synthesis() {
 		}
 		mp4Name := title + conver.Mp4Suffix
 		outputFile := filepath.Join(groupDir, mp4Name)
-		if c.Skip || Exist(outputFile) && c.findMp4Info(outputFile, c.ItemId) {
-			logrus.Warn("跳过完全相同的视频:", filepath.Join(groupPath, mp4Name))
+		if c.Skip || utils.IsExist(outputFile) && c.findMp4Info(outputFile, c.ItemId) {
+			logrus.Warn("跳过完全相同的视频: ", filepath.Join(groupPath, mp4Name))
 			continue
 		}
-		if Exist(outputFile) && !c.Overlay {
+		if utils.IsExist(outputFile) && !c.Overlay {
 			mp4Name = title + c.ItemId + conver.Mp4Suffix
 			outputFile = filepath.Join(groupDir, mp4Name)
 		}
 		if c.findMp4Info(outputFile, c.ItemId) {
-			logrus.Warn("跳过完全相同的视频:", filepath.Join(groupPath, mp4Name))
+			logrus.Warn("跳过完全相同的视频: ", filepath.Join(groupPath, mp4Name))
 			continue
 		}
 
@@ -138,12 +139,12 @@ func (c *Config) Synthesis() {
 		logrus.Warn("未合成任何文件！")
 	}
 	logrus.Print("==========================================")
-	logrus.Print("已完成合成任务，耗时:", end-begin, "秒")
+	logrus.Print("已完成合成任务，耗时: ", end-begin, "秒")
 	c.wait()
 }
 
 func (c *Config) findMp4Info(fp, sub string) bool {
-	if !Exist(c.GPACPath) {
+	if !utils.IsExist(c.GPACPath) {
 		return false
 	}
 	ret, err := exec.Command(c.GPACPath, "-info", fp).CombinedOutput()

@@ -23,11 +23,3 @@ func getCliPath(name string) string {
 
 	return strings.TrimSpace(stdout.String())
 }
-
-func exist(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return true
-}
