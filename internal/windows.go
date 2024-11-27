@@ -13,8 +13,7 @@ import (
 var mp4Box []byte
 
 func GetMP4Box() string {
-	mp4boxName := "MP4Box.exe"
-	mp4boxPath := filepath.Join(os.TempDir(), mp4boxName)
+	mp4boxPath := filepath.Join(os.TempDir(), "MP4Box.exe")
 	if !exist(mp4boxPath) {
 		logrus.Info("第一次运行,自动释放MP4Box")
 		if err := os.WriteFile(mp4boxPath, mp4Box, os.ModePerm); err != nil {
