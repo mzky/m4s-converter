@@ -17,8 +17,8 @@ func getCliPath(name string) string {
 	execCmd.Stderr = &stdout
 
 	if err := execCmd.Run(); err != nil {
-		logrus.Errorf("cmd run error, err=%v stderr=%v", err, stdout.String())
-		return stdout.String()
+		logrus.Errorf("找不到MP4Box命令,安装GPAC后重试: %v, %v", err, stdout.String())
+		os.Exit(1)
 	}
 
 	return strings.TrimSpace(stdout.String())

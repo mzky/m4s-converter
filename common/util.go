@@ -41,7 +41,7 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	var cmd *exec.Cmd
 	if c.GPACPath != "" {
 		cmd = exec.Command(c.GPACPath,
-			//"-quiet", // 仅打印异常日志
+			// "-quiet", // 仅打印异常日志
 			"-cprt", c.ItemId,
 			"-add", videoFile,
 			"-add", audioFile,
@@ -294,7 +294,7 @@ func (c *Config) findM4sFiles() error {
 	var m4sFiles []string
 	err := filepath.Walk(c.CachePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			logrus.Errorf("遍历目录异常: %v, 文件路径: %s", err, path)
+			logrus.Warnf("查找bilibili缓存目录异常: %s", path)
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == conver.M4sSuffix {
