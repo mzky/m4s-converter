@@ -16,8 +16,6 @@ GOOS=linux GOARCH=amd64 go build -tags "linux" -ldflags "-w -s" -o m4s-converter
 #
 echo build for windows-amd64...
 GOOS=windows GOARCH=amd64 go build -tags "windows" -ldflags "-w -s" -o m4s-converter-amd64.exe
-# 压缩
-upx --lzma m4s-converter-*
 #
 #echo build for Linux-arm64...
 #GOOS=linux GOARCH=arm64 GOARM=7 go build -tags "linux" -ldflags "-w -s" -o m4s-converter-linux_arm64 main.go
@@ -27,3 +25,5 @@ GOOS=darwin GOARCH=amd64 go build -tags "darwin" -o m4s-converter-darwin_amd64 m
 #
 echo build for darwin-arm64...
 GOOS=darwin GOARCH=arm64 go build -tags "darwin" -o m4s-converter-darwin_arm64 main.go
+# 压缩
+upx --lzma m4s-converter-amd64.exe m4s-converter-linux_amd64
