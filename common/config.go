@@ -37,10 +37,7 @@ func (c *Config) flag() {
 		fmt.Println(color.CyanString("源码版本: %s", sourceVer))
 		os.Exit(0)
 	}
-	if c.CachePath == "" {
-		c.CachePath = filepath.Join(u.HomeDir, "Videos", "bilibili")
-	}
-	c.GetCachePath()
+
 	if c.FFMpegPath != "" {
 		if c.FFMpegPath == "select" {
 			c.SelectFFMpegPath()
@@ -57,6 +54,10 @@ func (c *Config) flag() {
 	}
 	c.GPACPath = internal.GetMP4Box()
 	logrus.Warnln("使用MP4Box进行音视频合成")
+	if c.CachePath == "" {
+		c.CachePath = filepath.Join(u.HomeDir, "Videos", "bilibili")
+	}
+	c.GetCachePath()
 }
 func (c *Config) InitConfig() {
 	go c.PanicHandler()
