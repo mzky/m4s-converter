@@ -1,7 +1,7 @@
 package common
 
 var (
-	version   = "1.5.2"
-	sourceVer = "a8b8fb7 @2024-11-27 17:13:37 +0800"
-	buildTime = "2024-11-27 18:07:08 by go1.23.1 linux/amd64"
+	version   = "1.5.3"
+	sourceVer = "714b910 @2024-11-27 18:27:57 +0800"
+	buildTime = "2024-12-02 07:02:00 by go1.20.6 linux/amd64"
 )
