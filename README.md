@@ -17,7 +17,7 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 
 
 ### 除window和linux外，其它环境的依赖工具安装
-- 详见：https://github.com/mzky/m4s-converter/wiki/%E4%BE%9D%E8%B5%96%E5%B7%A5%E5%85%B7%E5%AE%89%E8%A3%85
+- 详见：[依赖工具安装](https://github.com/mzky/m4s-converter/wiki/%E4%BE%9D%E8%B5%96%E5%B7%A5%E5%85%B7%E5%AE%89%E8%A3%85)
 
 
 ### 命令行参数
