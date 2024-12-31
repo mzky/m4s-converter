@@ -12,8 +12,8 @@ bilibili下架了很多视频，之前收藏和缓存的视频均无法播放
 - https://github.com/mzky/m4s-converter/releases/latest
 
 
-### Android导出的文件合并方法 
-- 详见：https://github.com/mzky/m4s-converter/issues/9
+### Android手机端合并文件方法 
+- 详见：[拷贝文件与合成方法](https://github.com/mzky/m4s-converter/issues/9)
 
 
 ### 除window和linux外，其它环境的依赖工具安装
