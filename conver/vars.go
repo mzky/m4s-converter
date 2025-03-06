@@ -29,18 +29,3 @@ var (
 	*/
 	// AudioFileID = "30280"
 )
-
-type Entry struct {
-	Title     string `json:"title"`
-	TypeTag   string `json:"type_tag"`
-	Avid      int64  `json:"avid"`
-	Bvid      string `json:"bvid"`
-	OwnerId   int    `json:"owner_id"`
-	OwnerName string `json:"owner_name"`
-	PageData  struct {
-		Cid              int64  `json:"cid"`
-		Part             string `json:"part"`
-		DownloadTitle    string `json:"download_title"`    // "视频已缓存完成"
-		DownloadSubtitle string `json:"download_subtitle"` // "牢中注定（1955）"
-	} `json:"page_data"`
-}

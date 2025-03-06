@@ -3,7 +3,6 @@ package common
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	utils "github.com/mzky/utils/common"
 	"github.com/ncruces/zenity"
@@ -103,6 +102,7 @@ func (c *Config) FindM4sFiles(src string, info os.DirEntry, err error) error {
 				dst = strings.ReplaceAll(src, conver.M4sSuffix, conver.VideoSuffix)
 			}
 		}
+
 		if err = c.M4sToAV(src, dst); err != nil {
 			MessageBox(fmt.Sprintf("%v 转换异常：%v", src, err))
 			return err
@@ -394,7 +394,7 @@ func GetVAId(patch string) (videoID string, audioID string) {
 		return "", ""
 	}
 	if filepath.Base(filepath.Dir(patch)) != "80" {
-		logrus.Warn("找不到.playurl文件:\n", pu)
+		logrus.Warn("找不到.playurl文件:", pu, " ,切换到Android策略解析entry.json文件\n")
 	}
 	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
 	puDate, e := os.ReadFile(pu)
@@ -402,16 +402,12 @@ func GetVAId(patch string) (videoID string, audioID string) {
 		logrus.Error("找不到entry.json文件: ", pu)
 		return
 	}
-	var p conver.Entry
-	if err := json.Unmarshal(puDate, &p); err != nil {
-		logrus.Error("解析entry.json文件失败: ", err)
-		return
+	p := gjson.GetBytes(puDate, "page_data.download_title").String()
+	if p == "视频已缓存完成" || p == "" {
+		return "video.m4s", "audio.m4s"
 	}
-	if p.PageData.DownloadTitle != "视频已缓存完成" {
-		logrus.Error("跳过未缓存完成的视频", p.PageData.DownloadSubtitle)
-		return
-	}
-	return "video.m4s", "audio.m4s"
+	logrus.Error("跳过未缓存完成的视频", p)
+	return
 }
 
 func OpenFolder(outputDir string) {
