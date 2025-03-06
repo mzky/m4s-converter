@@ -394,20 +394,20 @@ func GetVAId(patch string) (videoID string, audioID string) {
 		return "", ""
 	}
 	if filepath.Base(filepath.Dir(patch)) != "80" {
-		logrus.Warn("找不到.playurl文件:", pu, " ,切换到Android策略解析entry.json文件\n")
+		logrus.Warnln("找不到.playurl文件,切换到Android模式解析entry.json文件")
 	}
-	pu = filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
-	puDate, e := os.ReadFile(pu)
+	androidPEJ := filepath.Join(filepath.Dir(filepath.Dir(patch)), conver.PlayEntryJson)
+	puDate, e := os.ReadFile(androidPEJ)
 	if e != nil {
-		logrus.Error("找不到entry.json文件: ", pu)
+		logrus.Error("找不到entry.json文件!")
 		return
 	}
-	p := gjson.GetBytes(puDate, "page_data.download_title").String()
-	if p == "视频已缓存完成" || p == "" {
-		return "video.m4s", "audio.m4s"
+	status := gjson.GetBytes(puDate, "page_data.download_title").String()
+	if status != "completed" && status != "视频已缓存完成" && status != "" {
+		logrus.Error("跳过未缓存完成的视频", status)
+		return
 	}
-	logrus.Error("跳过未缓存完成的视频", p)
-	return
+	return "video.m4s", "audio.m4s"
 }
 
 func OpenFolder(outputDir string) {

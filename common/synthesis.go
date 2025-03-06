@@ -87,7 +87,7 @@ func (c *Config) Synthesis() {
 		}
 		c.ItemId = strconv.Itoa(itemId)
 
-		if status != "completed" && status != "视频已缓存完成" {
+		if status != "completed" && status != "视频已缓存完成" && status != "" {
 			skipFilePaths = append(skipFilePaths, v)
 			logrus.Warn("未缓存完成,跳过合成", v, title+"-"+uname)
 			continue

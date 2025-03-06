@@ -1,6 +1,6 @@
 #!/bin/bash
-version="1.5.3"
-sourceVer=$(git log --date=iso --pretty=format:"%h @%cd" -1)
+version="1.5.5"
+sourceVer=$(git log --date=iso --pretty=format:"%h %cd" -1)
 buildTime="$(date '+%Y-%m-%d %H:%M:%S') by $(go version|sed 's/go version //')"
 cat <<EOF | gofmt >common/version.go
 package common
