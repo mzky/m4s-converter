@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	utils "github.com/mzky/utils/common"
-	"github.com/ncruces/zenity"
-	"github.com/sirupsen/logrus"
-	"github.com/tidwall/gjson"
 	"io"
 	"m4s-converter/conver"
 	"os"
@@ -15,6 +11,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	utils "github.com/mzky/utils/common"
+	"github.com/ncruces/zenity"
+	"github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 )
 
 type Config struct {
@@ -43,8 +44,8 @@ func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 		cmd = exec.Command(c.GPACPath,
 			// "-quiet", // 仅打印异常日志
 			"-cprt", c.ItemId,
-			"-add", videoFile,
-			"-add", audioFile,
+			"-add", videoFile+"#video",
+			"-add", audioFile+"#audio",
 			"-new", outputFile)
 	} else {
 		// 构建FFmpeg命令行参数
