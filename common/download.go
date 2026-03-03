@@ -2,17 +2,23 @@ package common
 
 import (
 	"compress/flate"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/pkg/errors"
 )
 
 func downloadFile(url string, filepath string) error {
+	// 创建带超时的HTTP客户端
+	client := &http.Client{
+		Timeout: 3 * time.Second, // 3秒超时
+	}
 	// 发起HTTP GET请求
-	httpReq, err := http.Get(url)
+	httpReq, err := client.Get(url)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "HTTP请求失败")
 	}
 	defer httpReq.Body.Close()
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
@@ -81,8 +82,13 @@ func (c *Config) InitConfig() {
 
 func diffVersion() {
 	apiURL := "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
-	resp, err := http.Get(apiURL)
+	// 创建带超时的HTTP客户端
+	client := &http.Client{
+		Timeout: 3 * time.Second, // 3秒超时
+	}
+	resp, err := client.Get(apiURL)
 	if err != nil {
+		logrus.Warn("版本检查失败:", err)
 		return
 	}
 	defer resp.Body.Close()

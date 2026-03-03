@@ -36,6 +36,7 @@ type Config struct {
 	Title      string
 	Uname      string
 	GroupTitle string
+	ExitFlag   bool
 }
 
 func (c *Config) overlay() string {
@@ -43,6 +44,16 @@ func (c *Config) overlay() string {
 		return "-y"
 	}
 	return "-n"
+}
+
+// SetExitFlag 设置退出标志
+func (c *Config) SetExitFlag(flag bool) {
+	c.ExitFlag = flag
+}
+
+// ShouldExit 检查是否应该退出
+func (c *Config) ShouldExit() bool {
+	return c.ExitFlag
 }
 func (c *Config) Composition(videoFile, audioFile, outputFile string) error {
 	var cmd *exec.Cmd
@@ -234,6 +245,12 @@ func (c *Config) copyFile(src, dst string) error {
 }
 
 func (c *Config) M4sToAV(src, dst string) error {
+	// 确保目标目录存在
+	dstDir := filepath.Dir(dst)
+	if err := os.MkdirAll(dstDir, os.ModePerm); err != nil {
+		logrus.Errorf("创建目标目录失败: %v", err)
+		return err
+	}
 	return c.copyFile(src, dst)
 }
 
@@ -277,7 +294,7 @@ func Filter(name string, err error) string {
 	name = strings.ReplaceAll(name, "【", "[")
 	name = strings.ReplaceAll(name, "】", "]")
 	name = strings.ReplaceAll(name, ":", "：")
-	name = strings.ReplaceAll(name, " ", "")
+	name = strings.ReplaceAll(name, " ", "_")
 
 	return strings.TrimSpace(name)
 }
@@ -491,7 +508,7 @@ func (c *Config) getMp4Metadata(filePath string) (map[string]string, error) {
 }
 
 // isIdenticalFileExists 检查目录中是否存在与输入音频和视频文件内容相同的文件
-func (c *Config) isIdenticalFileExists(dirPath string, videoPath string, audioPath string) (bool, string) {
+func (c *Config) isIdenticalFileExists(dirPath string, videoPath string, audioPath string, part string) (bool, string) {
 	// 读取目录中的所有文件
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -570,8 +587,16 @@ func (c *Config) isIdenticalFileExists(dirPath string, videoPath string, audioPa
 		metadata, err := c.getMp4Metadata(filePath)
 		if err == nil {
 			if metadata["title"] == c.GroupId && metadata["artist"] == c.Uid && metadata["album"] == c.ItemId {
-				logrus.Info("发现相同元数据的文件: ", filePath)
-				return true, filePath
+				// 如果提供了part，还需要检查文件名中是否包含part
+				if part != "" {
+					if strings.Contains(file.Name(), part) {
+						logrus.Info("发现相同元数据和part的文件: ", filePath)
+						return true, filePath
+					}
+				} else {
+					logrus.Info("发现相同元数据的文件: ", filePath)
+					return true, filePath
+				}
 			}
 		}
 	}

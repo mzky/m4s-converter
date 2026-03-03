@@ -44,6 +44,11 @@ func (c *Config) Synthesis() {
 	var outputFiles []string
 	var skipFilePaths []string
 	for _, v := range dirs {
+		// 检查是否应该退出
+		if c.ShouldExit() {
+			logrus.Info("正在退出程序...")
+			break
+		}
 		video, audio, e := c.GetAudioAndVideo(v)
 		if e != nil {
 			logrus.Error("找不到已修复的音频和视频文件:", e)
@@ -75,6 +80,8 @@ func (c *Config) Synthesis() {
 
 		title := Filter(js.Get("page_data").Get("download_subtitle").String())
 		title = null2Str(title, Filter(js.Get("title").String()))
+
+		part := Filter(js.Get("page_data").Get("part").String())
 
 		uname := Filter(js.Get("uname").String())
 		uname = null2Str(uname, Filter(js.Get("title").String()))
@@ -109,7 +116,11 @@ func (c *Config) Synthesis() {
 			}
 		}
 		// 生成输出文件名
-		mp4Name := title + conver.Mp4Suffix
+		// mp4Name := title + "-" + part + conver.Mp4Suffix
+		if part == "" {
+			part = title
+		}
+		mp4Name := part + conver.Mp4Suffix
 		outputFile := filepath.Join(groupDir, mp4Name)
 
 		// 设置元数据信息
@@ -134,7 +145,7 @@ func (c *Config) Synthesis() {
 		}
 
 		// 检查目录中是否存在与输入音频和视频文件内容相同的文件
-		if exists, existingFile := c.isIdenticalFileExists(groupDir, video, audio); exists {
+		if exists, existingFile := c.isIdenticalFileExists(groupDir, video, audio, part); exists {
 			logrus.Warn("跳过完全相同的视频: ", existingFile)
 			continue
 		}
