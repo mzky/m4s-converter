@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"m4s-converter/conver"
 	"os"
@@ -16,13 +17,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (c *Config) Synthesis() {
+func (c *Config) Synthesis(ctx context.Context) error {
 	begin := time.Now().Unix()
 	logrus.Println("查找缓存目录下可转换的文件...")
+
+	// 检查是否已取消
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	// 查找m4s文件，并转换为mp4和mp3
 	if err := filepath.WalkDir(c.CachePath, c.FindM4sFiles); err != nil {
 		MessageBox(fmt.Sprintf("查找并转换 m4s 文件异常：%v", err))
 		c.wait()
+		return err
 	}
 
 	dirs, err := GetCacheDir(c.CachePath) // 缓存根目录模式
@@ -44,7 +54,7 @@ func (c *Config) Synthesis() {
 	var outputFiles []string
 	var skipFilePaths []string
 	for _, v := range dirs {
-		video, audio, e := c.GetAudioAndVideo(v)
+		video, audio, e := c.GetAudioAndVideo(ctx, v)
 		if e != nil {
 			logrus.Error("找不到已修复的音频和视频文件:", e)
 			continue
@@ -75,6 +85,12 @@ func (c *Config) Synthesis() {
 
 		title := Filter(js.Get("page_data").Get("download_subtitle").String())
 		title = null2Str(title, Filter(js.Get("title").String()))
+
+		// 提取分集信息，用于区分多集视频
+		part := Filter(js.Get("part").String())
+		if part != "" {
+			title = title + "-" + part
+		}
 
 		uname := Filter(js.Get("uname").String())
 		uname = null2Str(uname, Filter(js.Get("title").String()))
@@ -159,7 +175,7 @@ func (c *Config) Synthesis() {
 	if c.Summarize {
 		// 查找未合并的MP3和视频文件
 		for _, v := range dirs {
-			video, audio, e := c.GetAudioAndVideo(v)
+			video, audio, e := c.GetAudioAndVideo(ctx, v)
 			if e != nil {
 				continue
 			}
@@ -184,15 +200,21 @@ func (c *Config) Synthesis() {
 				continue
 			}
 
-			groupTitle := Filter(js.Get("groupTitle").String())
-			groupTitle = null2Str(groupTitle, Filter(js.Get("owner_name").String()))
-			uname := Filter(js.Get("uname").String())
-			uname = null2Str(uname, Filter(js.Get("title").String()))
-			title := Filter(js.Get("page_data").Get("download_subtitle").String())
-			title = null2Str(title, Filter(js.Get("title").String()))
+		groupTitle := Filter(js.Get("groupTitle").String())
+		groupTitle = null2Str(groupTitle, Filter(js.Get("owner_name").String()))
+		uname := Filter(js.Get("uname").String())
+		uname = null2Str(uname, Filter(js.Get("title").String()))
+		title := Filter(js.Get("page_data").Get("download_subtitle").String())
+		title = null2Str(title, Filter(js.Get("title").String()))
 
-			// 添加空值检查，避免创建空目录名或尝试复制空文件路径
-			if groupTitle == "" && uname == "" {
+		// 提取分集信息，用于区分多集视频
+		part := Filter(js.Get("part").String())
+		if part != "" {
+			title = title + "-" + part
+		}
+
+		// 添加空值检查，避免创建空目录名或尝试复制空文件路径
+		if groupTitle == "" && uname == "" {
 				logrus.Warn("项目信息为空，跳过处理未合并文件: ", v)
 				continue
 			}
@@ -256,6 +278,7 @@ func (c *Config) Synthesis() {
 	logrus.Print("===========================================")
 	logrus.Print("已完成合成任务，耗时: ", end-begin, "秒")
 	c.wait()
+	return nil
 }
 
 func (c *Config) findMp4Info(fp, sub string) bool {

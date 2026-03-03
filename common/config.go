@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
@@ -16,6 +18,24 @@ import (
 	"github.com/integrii/flaggy"
 	"github.com/sirupsen/logrus"
 )
+
+// Config 存储应用程序的配置和状态
+type Config struct {
+	AssOFF     bool   // 关闭自动生成弹幕功能
+	Overlay    bool   // 合成文件时是否覆盖同名视频
+	Summarize  bool   // 将未合并的MP3和视频文件放入汇总目录
+	CachePath  string // 自定义视频缓存路径
+	GPACPath   string // 自定义GPAC的mp4box文件路径
+	OutputDir  string // 输出目录
+	Title      string // 视频标题
+	Uname      string // UP主名称
+	GroupTitle string // 分组标题
+	ItemId     string // 项目ID
+	GroupId    string // 分组ID
+	Uid        string // 用户ID
+	video      string // 当前处理的视频路径（内部使用）
+	AssPath    string // 生成的ASS字幕路径（内部使用）
+}
 
 func (c *Config) flag() {
 	var ver bool
@@ -57,7 +77,7 @@ func (c *Config) flag() {
 	}
 	c.GetCachePath()
 }
-func (c *Config) InitConfig() {
+func (c *Config) InitConfig(ctx context.Context) {
 	go c.PanicHandler()
 
 	// 首先解析命令行参数
@@ -76,12 +96,24 @@ func (c *Config) InitConfig() {
 	_, _ = fmt.Scanln()
 	logrus.Info("用户同意使用，程序继续执行")
 
-	diffVersion()
+	diffVersion(ctx)
 }
 
-func diffVersion() {
+func diffVersion(ctx context.Context) {
 	apiURL := "https://api.github.com/repos/mzky/m4s-converter/releases/latest"
-	resp, err := http.Get(apiURL)
+
+	// 创建带超时的 HTTP 客户端
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// 使用 context 创建请求
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return
 	}
