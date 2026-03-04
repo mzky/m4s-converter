@@ -63,9 +63,8 @@ C:\Users\mzky\Videos\bilibili\output\【4K8K-世界各地的美景】\中国-美
 - 本程序使用GPAC的MP4Box进行音视频合成，不会对下载的音视频进行转码
 
 
-#### 非缓存方式下载，推荐使用其它工具
-- https://github.com/nICEnnnnnnnLee/BilibiliDown
-- https://github.com/leiurayer/downkyi
+#### 本工具无下载视频功能
+
 
 ## 提缺陷和建议
 
